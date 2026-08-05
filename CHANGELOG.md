@@ -23,6 +23,23 @@ per-file diff commands.
 
 ### Fixed
 
+- **Negative and fractional filter flags are rejected in the Danish portal CLIs** (#281) -
+  `--jobage` (jobindex), `--radius` (jobnet), `--category`/`--jobtitle-id` (jobdanmark), and
+  `--company` (jobbank) now validate as positive integers, completing the `page`/`limit`/
+  `per-page` tightening from #191. Some portals silently ignore invalid filter values and
+  return unfiltered results, so a mistyped ID produced wrong results instead of an error.
+- **The upstream checker reports files missing from the upstream ref instead of a silent
+  `[OK]`** (#282) - if upstream renames or deletes a tracked framework file, a fork's
+  `check_upstream_updates.py` now lists it under a `[WARNING]` summary instead of skipping
+  it and printing a false all-clear.
+- **`09-web-research.md` is now tracked by the upstream checker** - the file shipped in
+  #277 but was never added to `FRAMEWORK_FILES`, so forks got no signal when it changed.
+- **jobbank and jobdanmark CLIs identify honestly** - jobbank's `User-Agent` was a full
+  Chrome browser string and jobdanmark's detail command sent a bare `Mozilla/5.0`; both now
+  use the `Mozilla/5.0 (compatible; <portal>-cli/1.0)` token the other portal CLIs use,
+  matching the identification posture settled in #277. Verified live: both portals serve
+  identical responses to the honest token.
+
 - **A `WebFetch` 403 is no longer treated as a dead posting** - `WebFetch` sends a bot user
   agent, and many bank and corporate sites answer it with HTTP 403 while serving the same
   page to a browser normally. Every command read that as "page unavailable" and degraded
