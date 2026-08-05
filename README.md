@@ -61,6 +61,8 @@ The framework encodes career guidance best practices, including structured evalu
 
 ## Prerequisites
 
+> 👋 **New here?** Read the [Beginner's Guide](BEGINNERS_GUIDE.md) first — it covers installation, profile setup, and step-by-step instructions for Claude Code, GitHub Copilot, Cursor, Google Codex, and OpenAI Codex.
+
 - [Claude Code](https://claude.com/claude-code) (CLI). Using a different agent tool (Codex, Antigravity, Gemini CLI)? Start at [`AGENTS.md`](AGENTS.md) - the portal search skills work there out of the box, and [community forks](https://github.com/MadsLorentzen/ai-job-search/discussions/78) adapt the full workflow.
 - Python 3.10+
 - [Bun](https://bun.sh) (for job search CLI tools)
