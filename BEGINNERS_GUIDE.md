@@ -62,25 +62,28 @@ An **AI agent** is the AI tool that reads your profile, thinks, and does the wor
 
 ### Side-by-Side Comparison
 
+All five agents now have **full feature parity**. Each has its own config file that teaches it the complete workflow.
+
 | Feature | Claude Code | GitHub Copilot | Cursor | Google Codex | OpenAI Codex |
 |---|---|---|---|---|---|
-| Full workflow (`/apply`, `/interview`) | ✅ Full | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial |
-| Job search (LinkedIn, Freehire, etc.) | ✅ | ✅ via CLI | ✅ via CLI | ✅ Auto | ✅ Auto |
-| CV & cover letter generation | ✅ Automated | ✅ Manual assist | ✅ Manual assist | ⚠️ Basic | ⚠️ Basic |
-| Interview prep | ✅ Guided | ✅ Manual | ✅ Manual | ⚠️ Basic | ⚠️ Basic |
-| Beginner-friendliness | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
-| Requires coding knowledge | ❌ No | ❌ No | ❌ No | ⚠️ Some | ⚠️ Some |
+| Full workflow (`/apply`, `/scrape`, `/rank`, `/interview`, etc.) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Job search (LinkedIn, Freehire, etc.) | ✅ | ✅ | ✅ | ✅ Auto | ✅ Auto |
+| CV & cover letter generation | ✅ Automated | ✅ Automated | ✅ Automated | ✅ Automated | ✅ Automated |
+| Interview prep | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Outcome tracking & upskill | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Auto-loads on startup | ✅ (CLAUDE.md) | ✅ (.github/copilot-instructions.md) | ✅ (.cursor/rules/) | ✅ (AGENTS.md) | ✅ (AGENTS.md) |
+| Beginner-friendliness | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
 | Cost | Claude Pro ($20/mo) or API key | $10–$39/mo | Free tier + paid | Varies | Varies |
 
 ### My recommendation:
 
 - **You want the simplest, most complete experience** → Use **Claude Code**
-- **You already pay for GitHub Copilot** → Use **GitHub Copilot** (works well, slightly more manual)
-- **You prefer a dedicated AI editor** → Use **Cursor**
+- **You already pay for GitHub Copilot** → Use **GitHub Copilot** — full parity, great in VS Code
+- **You prefer a dedicated AI editor** → Use **Cursor** — full parity, excellent Agent mode
 - **You use Google Cloud / want Google's AI** → Use **Google Codex / Antigravity**
 - **You use OpenAI / ChatGPT** → Use **OpenAI Codex**
 
-> 💡 You can switch agents later. Your profile files work with all of them.
+> 💡 You can switch agents at any time. Your profile files work with all of them, and every agent reads the same canonical workflow specs.
 
 ---
 
@@ -440,221 +443,341 @@ claude /outcome        # Record what happened
 
 ### 6.2 GitHub Copilot
 
-GitHub Copilot works best through **VS Code with the Copilot Chat panel**. The job search CLI tools work directly; for CV/cover letter generation you'll work interactively in the chat.
+GitHub Copilot now has **full feature parity** with Claude Code. The `.github/copilot-instructions.md` config file automatically loads your profile and maps every `/command` to the same step-by-step specs.
 
 #### Setup
-1. Open the `ai-job-search` folder in VS Code
-2. Open the **Copilot Chat** panel (click the chat icon in the sidebar)
-3. Enable `@workspace` context so Copilot can read all your profile files
+1. Open the `ai-job-search` folder in **VS Code**
+2. Install the **GitHub Copilot** extension (from the VS Code Extensions panel)
+3. Sign in with your GitHub account
+4. Open the **Copilot Chat** panel (the chat bubble icon in the sidebar)
+5. That's it — the workspace instructions load automatically from `.github/copilot-instructions.md`
 
-#### Search for jobs
-Run in the VS Code terminal:
-```bash
-cd .agents/skills/linkedin-search/cli
-bun run search.ts "software engineer remote"
+#### Running the full workflow
+
+Use **Copilot Chat in Agent mode** (click the dropdown next to the send button and select "Agent"). Then type commands exactly as you would in Claude Code:
+
+```
+/setup
+```
+→ Starts the interactive profile setup, asks you questions and populates all your profile files.
+
+```
+/scrape
+```
+→ Searches LinkedIn, Freehire, and other installed portals for new jobs matching your profile.
+
+```
+/rank
+```
+→ Scores all scraped jobs and returns a ranked shortlist.
+
+```
+/apply https://example.com/job-posting
+```
+→ Full application workflow: evaluates fit, drafts a tailored CV, drafts a cover letter, compiles both to PDF, and runs a verification checklist.
+
+```
+/interview
+```
+→ Prepares STAR stories, practice questions, and talking points for a specific interview.
+
+```
+/outcome
+```
+→ Records what happened to an application (interview stage, offer, rejection).
+
+```
+/upskill
+```
+→ Identifies skill gaps across your tracked jobs and builds a learning plan.
+
+#### Natural language also works
+```
+Find me software engineer jobs in Singapore
+```
+```
+Help me apply to this job: [paste job posting]
+```
+```
+What are my skill gaps based on jobs I've been applying to?
 ```
 
-For other boards:
-```bash
-cd .agents/skills/freehire-search/cli
-bun run search.ts "data analyst Copenhagen"
-```
-
-#### Evaluate and apply to a job
-In the Copilot Chat panel:
-```
-@workspace I found this job posting. Please:
-1. Evaluate my fit based on my profile in CLAUDE.md and 01-candidate-profile.md
-2. Tell me which skills I match and which I'm missing
-3. Recommend whether I should apply
-
-Job posting:
-[PASTE THE JOB POSTING TEXT HERE]
-```
-
-#### Generate a tailored CV
-```
-@workspace Based on the job posting above and my profile, please:
-1. Identify which of my experiences to highlight
-2. Rewrite the key bullets in my CV to match the role's language
-3. Suggest any skills to add or reorder
-
-I'll update cv/main.tex with your suggestions.
-```
-
-#### Generate a cover letter
-```
-@workspace Write a tailored cover letter for this role using:
-- My profile from CLAUDE.md
-- The cover letter structure in .claude/skills/job-application-assistant/06-cover-letter-templates.md
-- The company name and role title from the posting
-
-Format it so I can paste it into cover_letters/cover_<company>.tex
-```
-
-#### Compile your PDF
-```bash
-cd cv && lualatex -interaction=nonstopmode main_<company>.tex
-cd ../cover_letters && xelatex cover_<company>.tex
-```
+#### Tips for GitHub Copilot
+- Use **Agent mode** (not regular chat) for multi-step workflows — it can read files, run terminal commands, and edit files
+- If Copilot asks "which files should I read?", tell it: "Start with CLAUDE.md and the files in `.claude/skills/job-application-assistant/`"
+- After running `/apply`, the PDF compilation commands run automatically in the integrated terminal
 
 ---
 
 ### 6.3 Cursor
 
-Cursor's **Agent mode** is the most powerful way to use this framework outside of Claude Code. It can read files, run commands, and make edits autonomously.
+Cursor now has **full feature parity** with Claude Code. The `.cursor/rules/job-search.mdc` config file is automatically loaded at the start of every session, giving Cursor the same command map and profile context.
 
 #### Setup
-1. Open `ai-job-search` folder in Cursor
-2. Press `Cmd+L` (Mac) or `Ctrl+L` (Windows) to open the AI chat
-3. Switch to **Agent** mode (dropdown in chat)
+1. Download and install [Cursor](https://cursor.com)
+2. Open the `ai-job-search` folder in Cursor (`File → Open Folder`)
+3. Press `Cmd+L` (Mac) or `Ctrl+L` (Windows) to open the AI panel
+4. Switch to **Agent** mode using the dropdown next to the input box
+5. That's it — `.cursor/rules/job-search.mdc` loads automatically
 
-#### Run a full application workflow
-In Cursor's Agent chat:
-```
-I want to apply to a job. Here's the posting: [URL or paste text]
+#### Running the full workflow
 
-Please follow these steps from .claude/commands/apply.md:
-1. Evaluate my fit using my profile in CLAUDE.md and 01-candidate-profile.md
-2. Draft a tailored CV and save it as cv/main_<company>.tex
-3. Draft a cover letter and save it as cover_letters/cover_<company>.tex
-4. Compile both to PDF and tell me if there are any issues
-```
+In Cursor Agent chat, type the same commands as Claude Code:
 
-Cursor Agent will read your profile, follow the apply workflow steps, generate the files, and run the LaTeX compilation — automatically.
+```
+/setup
+```
+→ Interactive profile setup — Cursor will ask questions and create your profile files.
 
-#### Search for jobs
 ```
-@workspace Search for [job title] jobs in [location] using the LinkedIn search tool 
-at .agents/skills/linkedin-search/cli/
+/scrape
 ```
+→ Searches all installed job portals and presents new matches with fit ratings.
 
-#### Prepare for an interview
 ```
-@workspace I have an interview for [POSITION] at [COMPANY]. 
-Follow the interview prep steps in .claude/commands/interview.md.
-Read my profile from CLAUDE.md and help me prepare.
+/rank
+```
+→ Scores all scraped jobs and returns a ranked shortlist.
+
+```
+/apply https://example.com/job-posting
+```
+→ Full application: evaluates fit → drafts tailored CV → drafts cover letter → compiles PDFs → verifies.
+
+```
+/interview
+```
+→ Stage-specific interview prep: research, STAR stories, mock interview.
+
+```
+/outcome
+```
+→ Logs what happened to an application.
+
+```
+/upskill
+```
+→ Skill gap analysis and learning plan.
+
+#### Natural language also works
+```
+Find me data engineer jobs in remote
+```
+```
+I want to apply to this job: [paste or URL]
+```
+```
+Help me prepare for my interview at Acme Corp tomorrow
 ```
 
 #### Tips for Cursor
-- Use `@codebase` or `@workspace` to give Cursor access to your profile files
-- Agent mode is much more powerful than regular chat — always use it for multi-step tasks
-- Cursor can edit files directly — review its suggestions before saving
+- **Always use Agent mode** (not regular chat) for workflow commands — it has file access and terminal execution
+- Cursor can read files, edit them, and run commands all in one session — let it work without interrupting
+- Use `@` to reference specific files if Cursor needs more context (e.g. `@01-candidate-profile.md`)
+- After a `/apply` session, check the PDF output before doing anything else
 
 ---
 
 ### 6.4 Google Codex / Antigravity
 
-Google Codex and Antigravity **auto-discover the portal search skills** in `.agents/skills/`, so job searching works out of the box. For the full workflow, you'll reference the command files manually.
+Google Codex and Antigravity now have **full feature parity** via the expanded `AGENTS.md` file. The portal search skills in `.agents/skills/` are auto-discovered and the full command map is defined in `AGENTS.md`.
 
-#### Job search (auto-discovered)
-Just ask naturally:
+#### Setup
+1. Install Google Codex or Antigravity following [Google's setup guide](https://cloud.google.com)
+2. Open the `ai-job-search` folder
+3. Codex reads `AGENTS.md` automatically on startup — no extra configuration needed
+
+#### Running the full workflow
+
 ```
-Search for machine learning engineer jobs in Berlin
+/setup
 ```
-Codex will automatically find and use the LinkedIn and Freehire skills.
+→ Interactive profile setup.
 
-#### Full workflow (manual)
-Open `.claude/commands/apply.md` and use it as a prompt template. Copy the steps and paste them into your Codex session with the job posting.
-
-Example prompt:
 ```
-I want to apply to this job: [PASTE JOB TEXT]
-
-My profile is in CLAUDE.md and .claude/skills/job-application-assistant/01-candidate-profile.md
-
-Please follow these steps:
-1. Evaluate my fit (match skills, experience, behavioral profile)
-2. Draft a tailored CV based on cv/main_example.tex
-3. Draft a cover letter based on the structure in .claude/skills/job-application-assistant/06-cover-letter-templates.md
+/scrape
 ```
+→ Auto-discovers all portal CLIs in `.agents/skills/` and searches them in parallel.
+
+```
+/rank
+```
+→ Scores all scraped jobs into a ranked shortlist.
+
+```
+/apply https://example.com/job-posting
+```
+→ Full application workflow: fit evaluation → tailored CV → cover letter → PDF compilation → verification.
+
+```
+/interview
+```
+→ Interview preparation with STAR stories and mock interview.
+
+```
+/outcome
+```
+→ Logs application results.
+
+```
+/upskill
+```
+→ Skill gap analysis and learning plan.
+
+#### Natural language also works
+Since Codex reads `AGENTS.md`, it understands natural phrases:
+```
+Find me jobs in machine learning
+Search for backend developer roles in London
+Help me apply to this job: [paste posting]
+What skills am I missing for the jobs I'm tracking?
+```
+
+#### Tips for Google Codex
+- If Codex asks for context, tell it: "Start by reading AGENTS.md, then CLAUDE.md"
+- Portal search CLIs run via `bun` — make sure Bun is installed (`bun --version`)
+- For PDF compilation, Codex runs `lualatex` (CV) and `xelatex` (cover letter) in the terminal
 
 ---
 
 ### 6.5 OpenAI Codex
 
-OpenAI Codex works similarly to Google Codex, with auto-discovery of agent skills.
+OpenAI Codex has **full feature parity** via the expanded `AGENTS.md`, which it reads automatically. Portal skills are auto-discovered from `.agents/skills/`.
 
-#### Job search
+#### Setup
 ```bash
-# Or through the OpenAI Codex CLI:
-codex "Find backend developer jobs in Singapore using the skills in .agents/skills/"
+npm install -g @openai/codex
+# or follow OpenAI's setup guide at platform.openai.com
+export OPENAI_API_KEY=your_key_here
 ```
 
-#### Full workflow
-Same approach as Google Codex — use `.claude/commands/apply.md` as your prompt template.
+#### Running the full workflow
+
+Same commands as all other agents:
+
+```
+/setup          # Set up your profile interactively
+/scrape         # Search for jobs
+/rank           # Score and rank results
+/apply <url>    # Full application workflow
+/interview      # Interview preparation
+/outcome        # Log application results
+/upskill        # Skill gaps and learning plan
+```
+
+#### Natural language also works
+```
+Search for product manager jobs in New York
+Help me apply to this posting: [URL or text]
+What should I study to improve my job prospects?
+Prepare me for my interview at [company] for [role]
+```
 
 #### Tips for OpenAI Codex
-- Point Codex at specific files: "Read my profile from CLAUDE.md and 01-candidate-profile.md"
-- Paste the raw job posting text rather than a URL for better results
-- For PDF generation, run the LaTeX commands yourself in the terminal
+- Codex auto-discovers skills in `.agents/skills/` — just ask to search any portal
+- For best results, pass a job posting as text rather than a URL if the URL requires login
+- Codex runs terminal commands autonomously — it will compile your PDFs and verify them without you needing to run commands manually
 
 ---
 
 ## 7. Common Tasks
 
+All agents now support the same commands. Use the exact same syntax regardless of which agent you chose.
+
 ### Search for jobs
 
-| Agent | Command |
-|---|---|
-| Claude Code | `claude /scrape` |
-| GitHub Copilot / Cursor | `cd .agents/skills/linkedin-search/cli && bun run search.ts "your query"` |
-| Codex (Google/OpenAI) | Auto-discovered — just ask naturally |
+```
+/scrape
+```
+
+All agents understand this. Natural language also works: "Find me software engineer jobs in Singapore"
 
 ---
 
 ### Apply to a job
 
-| Agent | How |
-|---|---|
-| Claude Code | `claude /apply https://job-url` |
-| GitHub Copilot | Paste posting in chat, ask for CV + cover letter help |
-| Cursor (Agent mode) | Ask agent to follow `.claude/commands/apply.md` steps |
-| Codex | Use `.claude/commands/apply.md` as your prompt template |
+```
+/apply https://job-posting-url
+```
+
+Or paste the posting text directly:
+```
+/apply
+[paste job posting text here]
+```
+
+Works in all agents. The full workflow runs automatically:
+1. Evaluates your fit (skills, experience, behavioral match)
+2. Drafts a tailored CV as `cv/main_<company>_<role>.tex`
+3. Drafts a cover letter as `cover_letters/cover_<company>_<role>.tex`
+4. Compiles both to PDF
+5. Runs a verification checklist
 
 ---
 
-### Compile a PDF
+### Rank jobs
 
-```bash
-# CV (uses lualatex)
-cd cv
-lualatex -interaction=nonstopmode -halt-on-error main_<company>.tex
-
-# Cover letter (uses xelatex)
-cd cover_letters
-xelatex -interaction=nonstopmode -halt-on-error cover_<company>.tex
+```
+/rank
 ```
 
----
-
-### Add a job board for your country
-
-```bash
-claude /add-portal
-# Or ask: "Help me add a portal skill for [YOUR COUNTRY'S JOB BOARD]"
-```
-
-This scaffolds a new skill following the same format as the existing portals. Your local board gets picked up automatically by `/scrape`.
+Scores all scraped jobs and returns a prioritised shortlist. Run this after `/scrape` to decide where to focus.
 
 ---
 
 ### Prepare for an interview
 
-| Agent | Command |
-|---|---|
-| Claude Code | `claude /interview` |
-| GitHub Copilot / Cursor | Ask: "Help me prepare for a [POSITION] interview at [COMPANY] using `.claude/commands/interview.md`" |
-| Codex | Use `.claude/commands/interview.md` as your prompt |
+```
+/interview
+```
+
+Works in all agents. Generates STAR stories, practice questions, company research, and optional mock interview roleplay.
 
 ---
 
 ### Track an application outcome
 
-| Agent | Command |
-|---|---|
-| Claude Code | `claude /outcome` |
-| All others | Update `job_search_tracker.csv` manually: add the result (interviewed, offered, rejected) to the relevant row |
+```
+/outcome
+```
+
+Works in all agents. Records interview stages, offers, rejections — feeds back into future `/setup` calibration.
+
+---
+
+### Identify skill gaps
+
+```
+/upskill
+```
+
+Works in all agents. Analyses all your tracked jobs and produces a prioritised learning plan with resources.
+
+---
+
+### Add a job board for your country
+
+```
+/add-portal
+```
+
+Works in all agents. Scaffolds a new portal search skill for any job board. The new portal is automatically picked up by future `/scrape` runs.
+
+---
+
+### Compile a PDF manually (if needed)
+
+The agents compile PDFs automatically during `/apply`. If you need to recompile manually:
+
+```bash
+# CV — must use lualatex
+cd cv
+lualatex -interaction=nonstopmode -halt-on-error main_<company>_<role>.tex
+
+# Cover letter — must use xelatex
+cd cover_letters
+xelatex -interaction=nonstopmode -halt-on-error cover_<company>_<role>.tex
+```
 
 ---
 
@@ -667,8 +790,14 @@ Use this checklist to get up and running. Check off each item as you complete it
 - [ ] Bun installed (`bun --version`)
 - [ ] LaTeX installed (`lualatex --version`)
 - [ ] Job search tools installed (`bun install` in each `.agents/skills/*/cli/`)
-- [ ] Your AI agent installed and configured
+- [ ] Your AI agent installed and configured (see section 3.2)
 - [ ] (Optional) `pdftotext` installed for ATS checking
+
+### Agent-specific config verified
+- [ ] **Claude Code** — runs `claude` from the `ai-job-search` folder ✅
+- [ ] **GitHub Copilot** — `.github/copilot-instructions.md` exists in the repo ✅
+- [ ] **Cursor** — `.cursor/rules/job-search.mdc` exists in the repo ✅
+- [ ] **Google/OpenAI Codex** — `AGENTS.md` exists in the repo ✅
 
 ### Profile Setup
 - [ ] `CLAUDE.md` — all `[PLACEHOLDER]` tokens replaced with real info
