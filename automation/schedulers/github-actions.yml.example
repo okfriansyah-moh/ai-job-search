@@ -1,0 +1,17 @@
+name: Daily job search (private deployment template)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 13 * * *" # 20:00 WIB; verify DST/business requirements before enabling
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Explain local-state requirement
+        run: |
+          echo "This template is intentionally not enabled in the public fork."
+          echo "Run the local runner through Codex/Cursor/Claude/Copilot instead."
+

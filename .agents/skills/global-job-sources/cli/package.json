@@ -1,0 +1,6 @@
+{
+  "name": "global-job-sources-cli",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "bun test" }
+}

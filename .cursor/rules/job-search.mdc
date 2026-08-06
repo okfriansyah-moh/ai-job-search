@@ -37,6 +37,8 @@ When the user types any of these commands (with or without `/`), **read the corr
 |---|---|
 | `/setup` | `.claude/commands/setup.md` |
 | `/scrape` | `.claude/skills/job-scraper/SKILL.md` |
+
+For `/scrape` in Cursor, apply the canonical location gate in `.claude/skills/job-scraper/SKILL.md`: Indonesia roles may use any work model; roles outside Indonesia must be remote unless explicit employer-sponsored relocation and a relocation package are stated.
 | `/rank` | `.claude/commands/rank.md` |
 | `/apply <url or text>` | `.claude/commands/apply.md` |
 | `/interview` | `.claude/commands/interview.md` |

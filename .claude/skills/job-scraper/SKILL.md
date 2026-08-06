@@ -105,6 +105,7 @@ site for the role and store that URL instead, or drop the candidate rather than 
 fragment link.
 
 For every candidate:
+- Apply the **location gate before fit scoring**. Jobs located outside Indonesia must be fully remote, unless the posting explicitly confirms employer-sponsored relocation **and** a relocation package. Hybrid, onsite, or ambiguous-location roles outside Indonesia without that explicit support must be excluded and must not appear as Good Fit or High Match. Indonesia-based roles may be remote, hybrid, or onsite.
 - Skip if the URL or company+title combo already exists in `seen_jobs.json`
 - Skip if the company+role already appears in `job_search_tracker.csv`
 
@@ -121,6 +122,8 @@ For each new job, do a rapid fit check (NOT the full evaluation from `04-job-eva
 - **High match**: Role directly involves your core skills
 - **Medium match**: Role is adjacent to your experience
 - **Low match**: Role requires significant skills you lack
+
+**Location override:** For any role outside Indonesia, `remote` is required unless the full posting explicitly states relocation sponsorship/support and a relocation package. Reject outside-Indonesia roles marked onsite, hybrid, or with no clear work mode when neither supported relocation nor a package is stated. Do not score or present them as matches. Indonesia-based roles can pass this gate regardless of work model.
 
 **Language override:** before assigning a match level, check the posting against `04-job-evaluation.md`'s Language Gate (a required language you haven't declared at all in your CLAUDE.md Languages table). A required language that's entirely undeclared overrides skill fit: mark it **Low** regardless of how well the skills align, and name it in the highlight bullets so it isn't buried under an otherwise-good-looking match. A **declared** language at a requirement that reads higher than your declared level is *not* an override — score fit normally, but add a red-flag bullet under that job's highlights (Step 5) quoting the posting's requirement next to your declared level, so the gap is visible without being auto-downgraded.
 
@@ -246,7 +249,7 @@ If the user decides to apply to any job, add a row to `job_search_tracker.csv`.
 
 1. **Never fabricate job postings.** Only present jobs from actual CLI search/detail output or WebSearch/WebFetch results.
 2. **Respect deduplication.** Always check seen_jobs.json AND job_search_tracker.csv before presenting.
-3. **Focus on configured geographic area.** Skip jobs that require relocation or are clearly outside commute range.
+3. **Apply the location gate exactly.** Indonesia-based roles may be onsite, hybrid, or remote. Every role outside Indonesia must be remote, except when employer-sponsored relocation and a relocation package are explicitly stated. Skip unsupported onsite/hybrid/ambiguous outside-Indonesia roles before fit scoring.
 4. **Only open positions.** Skip postings with expired deadlines or those marked as closed.
 5. **Be efficient with detail fetches.** Don't run `detail` or WebFetch on every search hit — pre-filter by title/snippet, then fetch only promising matches.
 6. **Parallel searches.** Run portal CLI searches in parallel; use WebSearch only for gaps the CLIs don't cover.

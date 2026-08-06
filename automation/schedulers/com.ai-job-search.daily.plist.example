@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.ai-job-search.daily</string>
+  <key>WorkingDirectory</key><string>/ABSOLUTE/PATH/ai-job-search</string>
+  <key>ProgramArguments</key>
+  <array><string>/usr/bin/python3</string><string>automation/run_daily.py</string><string>--scheduler</string><string>launchd</string></array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>20</integer><key>Minute</key><integer>15</integer></dict>
+  <key>StandardOutPath</key><string>/ABSOLUTE/PATH/ai-job-search/automation/state/launchd.log</string>
+  <key>StandardErrorPath</key><string>/ABSOLUTE/PATH/ai-job-search/automation/state/launchd.error.log</string>
+</dict>
+</plist>
+

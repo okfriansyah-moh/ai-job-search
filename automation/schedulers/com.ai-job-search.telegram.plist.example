@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.ai-job-search.telegram</string>
+  <key>WorkingDirectory</key><string>/ABSOLUTE/PATH/ai-job-search</string>
+  <key>ProgramArguments</key>
+  <array><string>/usr/bin/python3</string><string>automation/telegram_listener.py</string></array>
+  <key>KeepAlive</key><true/>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>/ABSOLUTE/PATH/ai-job-search/automation/state/telegram.log</string>
+  <key>StandardErrorPath</key><string>/ABSOLUTE/PATH/ai-job-search/automation/state/telegram.error.log</string>
+</dict>
+</plist>
+
