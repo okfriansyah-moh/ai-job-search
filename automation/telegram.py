@@ -128,7 +128,7 @@ class TelegramClient:
         token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
         chat_id = (os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_ALLOWED_CHAT_ID") or "").strip()
         if not token or not chat_id:
-            raise RuntimeError("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are required")
+            raise RuntimeError("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID (or TELEGRAM_ALLOWED_CHAT_ID) are required")
         return cls(token, chat_id)
 
     @classmethod
@@ -285,6 +285,11 @@ def process_update(root: Path, state: StateStore, update: dict[str, Any]) -> Non
             record_stage(root, job, stage)
             upsert_status(tracker, job, "interview", f"interview stage recorded: {stage}", fit=str(job.get("rank_score", "")))
             client.send(f"✅ Interview stage recorded: <b>{html.escape(stage.title())}</b>.")
+        elif action == "cancel":
+            pending = state.read_json("pending.json", {})
+            pending.pop(chat_id, None)
+            state.write_json("pending.json", pending)
+            client.send("↩ Cancelled.")
         elif action == "setstatus":
             status = parts[2] if len(parts) == 3 else "interview"
             upsert_status(tracker, job, status, f"status changed to {status} from Telegram", fit=str(job.get("rank_score", "")))

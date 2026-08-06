@@ -24,7 +24,7 @@ class AutomationTest(unittest.TestCase):
         self.assertEqual(eligibility(remote)["eligible"], "yes")
         self.assertEqual(eligibility({**remote, "location": "Gurugram, India"})["eligible"], "no")
         self.assertEqual(eligibility({**remote, "location": "London, UK", "description": "Hybrid role"})["eligible"], "no")
-        self.assertEqual(eligibility({**remote, "location": "Jakarta, Indonesia"})["eligible"], "no")
+        self.assertEqual(eligibility({**remote, "location": "Jakarta, Indonesia"})["eligible"], "yes")
         self.assertEqual(eligibility({**remote, "title": "Software Engineer"})["eligible"], "no")
 
     def test_language_gate(self):

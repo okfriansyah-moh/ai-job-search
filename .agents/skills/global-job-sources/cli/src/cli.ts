@@ -205,14 +205,15 @@ async function main(): Promise<void> {
   }
   try {
     const jobage = Math.max(1, Number.parseInt(value(argv, "--jobage", "14"), 10) || 14)
-    const output = await search(source, values(argv, "--query"), jobage)
     if (command === "detail") {
       const identifier = value(argv, "--id") || value(argv, "--url")
+      const output = await search(source, [], Number.MAX_SAFE_INTEGER)
       const job = output.results.find((item) => item.id === identifier || item.externalId === identifier || item.url === identifier)
       if (!job) throw new Error("posting not found in the current public feed")
       process.stdout.write(JSON.stringify(job) + "\n")
       return
     }
+    const output = await search(source, values(argv, "--query"), jobage)
     process.stdout.write(JSON.stringify(output) + "\n")
   } catch (error) {
     process.stderr.write(JSON.stringify({ error: error instanceof Error ? error.message : String(error), code: "API_ERROR" }) + "\n")

@@ -106,7 +106,7 @@ def run(args: argparse.Namespace) -> int:
             portal_reports = []
             fetched: list[dict[str, Any]] = []
             for portal in enabled_portals(ROOT):
-                report = run_portal(ROOT, portal, since=(date.today() - timedelta(days=14)).isoformat())
+                report = run_portal(ROOT, portal, since=(datetime.now(ZoneInfo("Asia/Jakarta")).date() - timedelta(days=14)).isoformat())
                 portal_reports.append(report)
                 fetched.extend(report["results"])
             seen, new_jobs = merge_jobs(seen, fetched, tracker_keys, day)

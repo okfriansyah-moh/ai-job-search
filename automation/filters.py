@@ -66,7 +66,7 @@ def location_gate(job: dict[str, Any]) -> tuple[str, str]:
     if is_india_job(job):
         return "FAIL", "India-based role, employer, or work location is excluded by the candidate profile."
     if is_indonesia_job(job):
-        return "FAIL", "Indonesia-based roles are excluded from the daily international-remote search."
+        return "PASS", "Indonesia-based roles are accepted in any work model."
 
     text = normalize(" ".join(str(job.get(field, "")) for field in ("job_location", "location", "work_mode", "description")))
     if re.search(r"\b(remote|distributed|work from anywhere|anywhere in the world|global remote)\b", text):

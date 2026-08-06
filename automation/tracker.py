@@ -88,9 +88,10 @@ def upsert_status(
         rows.append(row)
     _set_if_present(row, fields, ("status",), status)
     _set_if_present(row, fields, ("fit", "fit_rating"), fit)
-    _set_if_present(row, fields, ("date_applied", "date"), applied_date or (date.today().isoformat() if status == "applied" else ""))
+    if applied_date or status == "applied":
+        _set_if_present(row, fields, ("date_applied", "date"), applied_date or date.today().isoformat())
     _set_if_present(row, fields, ("channel",), channel)
-    _append_note(row, fields, f"{date.today().isoformat()} telegram: {note}")
+    _append_note(row, fields, f"{date.today().isoformat()} {channel}: {note}")
     write_tracker(path, fields, rows)
     return row
 
