@@ -31,6 +31,8 @@ When the user types any of the commands below (with or without a leading `/`), *
 |---|---|---|
 | `/setup` | `.claude/commands/setup.md` | Interactive onboarding — collect the user's profile and populate all profile files |
 | `/scrape` | `.claude/skills/job-scraper/SKILL.md` | Search job portals for new positions matching the candidate's profile |
+
+For `/scrape` in Copilot CLI, apply the canonical location gate in `.claude/skills/job-scraper/SKILL.md`: Indonesia roles may use any work model; roles outside Indonesia must be remote unless explicit employer-sponsored relocation and a relocation package are stated.
 | `/rank` | `.claude/commands/rank.md` | Batch-score scraped jobs from `job_scraper/seen_jobs.json` into a ranked shortlist |
 | `/apply <url or text>` | `.claude/commands/apply.md` | Full drafter-reviewer application workflow: evaluate fit → draft CV → draft cover letter → compile PDFs → verify |
 | `/interview` | `.claude/commands/interview.md` | Stage-specific interview prep: research, STAR stories, mock interview |

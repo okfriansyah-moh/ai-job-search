@@ -51,6 +51,8 @@ When the user types any of the following commands (with or without a leading `/`
 |---|---|---|
 | `/setup` | `.claude/commands/setup.md` | Interactive onboarding: collect the candidate's profile and populate all profile files |
 | `/scrape` | `.claude/skills/job-scraper/SKILL.md` | Search job portals for new positions matching the profile |
+
+For `/scrape` in Codex CLI, apply the canonical location gate in `.claude/skills/job-scraper/SKILL.md`: Indonesia roles may use any work model; roles outside Indonesia must be remote unless explicit employer-sponsored relocation and a relocation package are stated.
 | `/rank` | `.claude/commands/rank.md` | Batch-score scraped jobs into a ranked shortlist |
 | `/apply <url or text>` | `.claude/commands/apply.md` | Full workflow: evaluate fit → draft tailored CV → draft cover letter → compile PDFs → verify |
 | `/interview` | `.claude/commands/interview.md` | Stage-specific interview prep: research, STAR stories, mock interview |
@@ -62,6 +64,8 @@ When the user types any of the following commands (with or without a leading `/`
 | `/html-report` | `.claude/commands/html-report.md` | Generate a self-contained HTML dashboard from the application tracker |
 | `/gmail-sync` | `.claude/commands/gmail-sync.md` | Scan Gmail for application status signals and update the tracker |
 | `/notion-sync` | `.claude/commands/notion-sync.md` | Push ranked jobs and applications to a Notion database |
+| `/daily` | `automation/README.md` | Run the scheduler-neutral daily job search and Telegram digest |
+| `/telegram` | `automation/README.md` | Run the local Telegram listener for job tracking actions |
 | `/reset` | `.claude/commands/reset.md` | Reset parts of the framework to a blank state |
 
 ### Natural language equivalents
@@ -104,6 +108,10 @@ Available portals:
 - `jobdanmark-search` — Jobdanmark (Denmark)
 
 Deduplicate all results against `job_scraper/seen_jobs.json` before presenting them.
+
+The scheduler-neutral automation entrypoint is `python3 automation/run_daily.py`.
+Codex Scheduled Task is the default trigger; Cursor, Claude Code, GitHub Actions/Copilot,
+cron, and launchd adapters are documented under `automation/schedulers/`.
 
 ---
 

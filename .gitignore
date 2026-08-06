@@ -84,6 +84,10 @@ gmail_sync/
 # Generated reports (personal output from /html-report)
 reports/
 
+# Daily automation state, locks, logs, Telegram mappings, and outbox
+automation/state/
+automation/.env
+
 # Upskill reports (personal output)
 upskill/*.md
 
