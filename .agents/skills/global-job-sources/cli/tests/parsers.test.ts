@@ -33,4 +33,9 @@ describe("shared global-source parsers", () => {
     const valid = `<a href="https://javascript.jobs/job/staff-engineer" class="jobcardStyle1"><div class="tw-text-lg">Staff Engineer</div><span class="tw-card-title">Example Co</span><span class="tw-bg-[#E7F6EA]">Full Time</span>`
     expect(parserForTest.jsRemotely(`${valid}<a href="https://javascript.jobs/job/broken"`).map((job) => job.title)).toEqual(["Staff Engineer"])
   })
+
+  test("ignores invalid numeric HTML entities without throwing", () => {
+    expect(() => parserForTest.decodeHtml("Broken &#99999999; entity")).not.toThrow()
+    expect(parserForTest.decodeHtml("Broken &#99999999; entity")).toBe("Broken  entity")
+  })
 })

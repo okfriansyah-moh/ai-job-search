@@ -33,7 +33,9 @@ _REGIONAL_RESTRICTIONS: tuple[tuple[str, str], ...] = (
     ("India", r"\bindia\b"),
 )
 
-_REMOTE_SIGNAL = re.compile(r"\b(?:remote|distributed|work from anywhere|work-from-anywhere|location independent|global remote)\b")
+_REMOTE_SIGNAL = re.compile(
+    r"\b(?:remote|distributed|work from anywhere|work-from-anywhere|anywhere in the world|location independent|global remote|worldwide)\b"
+)
 _TIMEZONE_SIGNAL = re.compile(
     # A bare time-zone mention can describe a company's customers or offices,
     # so require an eligibility/working-hours cue.  Both word orders occur in

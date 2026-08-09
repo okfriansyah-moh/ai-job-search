@@ -22,6 +22,12 @@ class AutomationTest(unittest.TestCase):
     def test_location_and_india_gates(self):
         remote = {"company": "Example", "title": "Software Engineering Manager", "location": "Remote", "description": "Remote worldwide"}
         self.assertEqual(eligibility(remote)["eligible"], "yes")
+        anywhere_worldwide = {
+            **remote,
+            "location": "Berlin, Germany",
+            "description": "This role is distributed and can be done from anywhere in the world.",
+        }
+        self.assertEqual(eligibility(anywhere_worldwide)["eligible"], "yes")
         self.assertEqual(eligibility({**remote, "location": "Gurugram, India"})["eligible"], "no")
         self.assertEqual(eligibility({**remote, "location": "London, UK", "description": "Hybrid role"})["eligible"], "no")
         self.assertEqual(eligibility({**remote, "location": "Jakarta, Indonesia"})["eligible"], "yes")

@@ -272,7 +272,8 @@ class NotificationDeduper:
         connection = self._connect()
         try:
             row = connection.execute(
-                "SELECT COUNT(*) AS count FROM notification_deliveries WHERE status=?", (STATUS_UNCERTAIN,)
+                "SELECT COUNT(*) AS count FROM notification_deliveries WHERE status IN (?, ?)",
+                (STATUS_PENDING, STATUS_UNCERTAIN),
             ).fetchone()
             return int(row["count"])
         finally:

@@ -246,7 +246,7 @@ def send_digest(root: Path, jobs: list[dict[str, Any]], state: StateStore, dry_r
     if jobs:
         # A stable, per-set summary prevents a force-run from repeating the
         # heading while preserving the existing Telegram card presentation.
-        job_fingerprints = sorted(notification_fingerprint(job) for job in jobs)
+        job_fingerprints = sorted({notification_fingerprint(job) for job in jobs})
         candidates.append({
             "created": time.time(),
             "text": f"<b>Daily job matches</b>\n{len(jobs)} new ranked job(s).",

@@ -82,6 +82,41 @@ class NotificationDeduplicationTest(unittest.TestCase):
             # Summary + card from the first call, and nothing from the second.
             self.assertEqual(client.send.call_count, 2)
 
+    def test_send_digest_summary_fingerprint_is_stable_when_input_has_duplicates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state = StateStore(Path(directory))
+            job = {
+                "company": "Example",
+                "title": "Principal Engineer",
+                "job_location": "Remote",
+                "url": "https://example.test/jobs/1",
+                "rank_score": 90,
+            }
+            duplicate = {**job, "source": "syndicated-board"}
+            client = MagicMock()
+            client.send.return_value = {"message_id": 1}
+            with patch("automation.telegram.TelegramClient.from_env", return_value=client), patch("automation.telegram.time.sleep"):
+                first = send_digest(Path(directory), [job, duplicate], state)
+                second = send_digest(Path(directory), [job], state)
+            self.assertEqual(first["failed"], 0)
+            self.assertEqual(second["failed"], 0)
+            # Dedupe should keep the digest identity stable, so no second summary.
+            self.assertEqual(client.send.call_count, 2)
+
+    def test_unresolved_count_includes_pending_and_uncertain(self):
+        with tempfile.TemporaryDirectory() as directory:
+            ledger = NotificationDeduper(StateStore(Path(directory)))
+            pending = ledger.claim({"external_id": "pending", "source": "test"})
+            self.assertTrue(pending.claimed)
+            self.assertEqual(ledger.unresolved_count(), 1)
+
+            ledger.mark_failed(pending.fingerprint, "timeout", retryable=False)
+            self.assertEqual(ledger.unresolved_count(), 1)
+
+            failed = ledger.claim({"external_id": "failed", "source": "test"})
+            ledger.mark_failed(failed.fingerprint, "HTTP 429", retryable=True)
+            self.assertEqual(ledger.unresolved_count(), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

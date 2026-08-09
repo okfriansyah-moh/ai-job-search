@@ -103,3 +103,6 @@ upskill/*.md
 
 # Brainstorm mockups (superpowers visual companion) - never ship
 .superpowers/
+
+# Local scratch/debug captures
+.scratch/
