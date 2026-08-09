@@ -13,7 +13,53 @@ per-file diff commands.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Tracker status enum defined once; `offer declined`/`no response` now reach the correct
+  `/html-report` bucket and `/gmail-sync` correctly marks them final** (#298). The tracker
+  CSV `status` column had no single authoritative definition. Six command files restated it
+  independently with inconsistent spellings, producing two concrete bugs:
+
+  - `/outcome` Step 4 wrote `no response` and `offer declined` (with spaces). `/html-report`
+    Step 1 normalised only `no_response` / `offer_declined` (underscores), so any row written
+    with spaces matched no bucket and was silently dropped from the rejection-rate denominator.
+  - `/gmail-sync` Step 2 defined the "final" set with the space forms, so a row written with
+    underscores was never recognised as final and the sync kept chasing closed applications.
+  - `/html-report` included `interview_only` in the tracker bucket map; that value belongs to
+    the archive `outcome.md` `Status:` field, not the CSV `status` column.
+
+  Fix: a `## Tracker status vocabulary` block in `/outcome` (the only writer of the CSV)
+  now defines the canonical set once with underscore spellings and the **Final** set by
+  explicit list — everything else, `drafted` included, is **Open**. The legacy space
+  spellings are the same values, not separate statuses: equally **Final**, and every rule
+  that names one form applies to the other — readers must accept them on read, and never
+  write them. Every reader that makes final/open decisions references that block (`/apply`
+  Step 6b, `/interview` Step 0, `/gmail-sync` Step 2, `/html-report` Step 1, `/notion-sync`
+  Steps 3-4). `/outcome` Step 4 writes `no_response` / `offer_declined`; `/notion-sync`
+  normalises both forms to the canonical spellings before setting the Status property;
+  `/html-report`'s bucket map loses `interview_only`, keeps both spellings, and gains a
+  case-insensitive catch-all that maps unrecognised values to **Rejected/Closed** and names
+  them once in the status breakdown. Pinned by `tests/test_tracker_status_vocab.py`.
+
+  **Fork heads-up:** if your personalized `/outcome` adds `no response` or `offer declined`
+  (space forms) to the tracker write path, swap them for the underscore forms. Existing rows
+  keep working because every reader now accepts both spellings on read. If your Notion
+  database already carries space-form Status options, they simply go unused — Notion never
+  auto-removes select options.
+
+## [1.4.0] - 2026-08-07
+
 ### Added
+
+- **`--jobage-minutes` on linkedin-search for sub-day freshness windows** (#302) - LinkedIn
+  filters its `f_TPR` parameter server-side at second granularity, so the CLI can now ask
+  for postings from the last N minutes instead of whole-day windows only. Conflicts with
+  `--jobage` are rejected explicitly (`CONFLICTING_AGE_FLAGS`). Useful for early-applicant
+  freshness on high-volume searches; URL construction only, no parsing change.
+
+- **README: video walkthrough link in Quick start** - The Next New Thing's hands-on
+  walkthrough of the workflow (recorded August 2026), for newcomers who want to see the
+  setup-to-application flow before reading. Docs only.
 
 - **Spec-pinning tests for the Language Gate's `/rank` contract** (#278) - four regression
   guards in `tests/test_rank_command.py` pinning the `language_gate`/`language_note` fields
@@ -21,7 +67,59 @@ per-file diff commands.
   during #275 (vetoes reported in console output but `language_gate: null` on every persisted
   entry). Mirrors the existing `gaps`/`strengths` pinning pattern. No behavior change.
 
+- **The jobnet and jobdanmark CLIs identify themselves on every API request** (#283) - their
+  `apiFetch`/`apiPost` wrappers now send an explicit `User-Agent` (`jobnet-cli/1.0`,
+  `jobdanmark-cli/1.0`) instead of Bun's anonymous default token, matching the honest
+  self-identification jobindex already uses on `htmlFetch`. The new `user-agent.test.ts`
+  suites assert the header on every request wrapper. No response behavior observed to
+  change.
+
+### Changed
+
+- **The four Danish demo portals now ship disabled** (#288) - `jobindex-search`,
+  `jobbank-search`, `jobdanmark-search`, and `jobnet-search` default to `enabled: false`,
+  and `/setup`'s job-portals question now acts on the answer: it flips them to
+  `enabled: true` when your market is Denmark, and leaves them off otherwise. Previously a
+  non-Danish user's `/scrape` ran all four Danish boards by default, spending tokens
+  fetching and filtering irrelevant listings. **Fork heads-up:** if you search the Danish
+  market, set `enabled: true` in those four `SKILL.md` files after updating (or re-run
+  `/setup --section search`); forks that already curated their portal set are unaffected.
+
 ### Fixed
+
+- **The linkedin-search CLI identifies honestly** - its `User-Agent` was a full Chrome
+  browser string, the last portal CLI still spoofing after #283 and the jobbank/jobdanmark
+  fix. It now sends `Mozilla/5.0 (compatible; linkedin-search-cli/1.0)`, the same token
+  format as every other portal. Verified live on both the search and detail endpoints:
+  identical 200 responses with full content under the honest token.
+
+- **A `.env` was committable** (`.gitignore`, `tools/security_guards.py`). `/add-portal`
+  can generate a skill for a portal that only returns usable content through a paid
+  fetching service, and such a skill reads an API token from the environment - but
+  nothing stopped the `.env` holding that token from being committed. No shipped portal
+  needs a credential, so upstream never hit this; a fork whose generated portals do hit
+  it immediately. `.env` and `.env.*` are now ignored and pinned in
+  `REQUIRED_IGNORE_RULES`, so the guard fails if the rule is ever dropped.
+
+- **The robots gate did not fail closed** (`tools/robots_check.py`, #277). Found by an
+  adversarial review run over the merged file, not by inspection. Both cases are pinned
+  in `tests/test_robots_check.py` as FAIL-OPEN REGRESSIONs:
+
+  - **A soft `200` granted permission.** A host answering `/robots.txt` with an HTML
+    error page at status 200 produces a body that parses to zero rules, and zero rules
+    read as "allowed" - so the browser-header retry ran on permission that was never
+    given. A non-empty body carrying no recognised directive is now treated as
+    unreadable. A genuinely empty file stays allow-all, per RFC 9309.
+  - **`Disallow` patterns were never percent-decoded** while the request path was, so
+    `Disallow: /foo%20bar` never matched `/foo bar` and the rule was silently skipped -
+    a fail-open on any site that encodes its own rules.
+
+- **`curl` argument hardening** (`tools/robots_check.py`). The curl argv had no `--`
+  terminator before the URL. `gate()` rebuilds the target as `scheme://host/robots.txt`
+  before calling `_fetch`, so the gate path was never exposed; this is hardening for
+  direct callers, with a test pinning the terminator, that a dash-leading argument fails
+  closed end to end, and that `gate()` never passes a caller-supplied URL through to
+  curl. `--max-redirs 5` is set explicitly rather than left to curl's default.
 
 - **Negative and fractional filter flags are rejected in the Danish portal CLIs** (#281) -
   `--jobage` (jobindex), `--radius` (jobnet), `--category`/`--jobtitle-id` (jobdanmark), and
@@ -67,6 +165,41 @@ per-file diff commands.
   obeyed strictly; and `urllib.robotparser` cannot be used, because it ends a record at a
   blank line and matches in file order, which reads a real-world policy as
   "everything allowed".
+
+- **`/apply` now records the application in the tracker** - the flagship command wrote a CV
+  and a cover letter to disk and then wrote nothing to `job_search_tracker.csv`, so a drafted
+  and submitted application was invisible to `/gmail-sync`, `/html-report`, `/notion-sync`,
+  `/interview`, `/upskill` aggregate mode, and to `/rank`'s dedup exclusion - and the safety
+  net that would have caught it (`/gmail-sync`) refuses to create missing rows, so nothing
+  detected the loss. A new Step 6b appends a `drafted` row carrying the two document paths,
+  the fit rating and the posting URL, reusing `/outcome`'s exact header so the two commands
+  cannot diverge; re-running `/apply` updates that row rather than duplicating it, unless every
+  matching row holds a final status, in which case a second application to the same role gets
+  its own row. The same
+  step is mirrored into `job-application-assistant` because `/scrape` Step 5 routes straight
+  into the skill (`framework_version` 1.2.0 -> 1.3.0), and `/scrape` Step 6 now defers to it
+  instead of adding a row of its own. `seen_jobs.json` is deliberately left alone. **Forks:**
+  the bump means `check_upstream_updates.py` will flag the skill - reconcile the new Step 3b
+  (and Step 6b in `apply.md`) into your personalized copies rather than skipping the flag.
+
+  **`drafted` is introduced into the tracker status vocabulary**, and every reader that
+  meant *submitted* now says so. These readers define "open" by exclusion from the final
+  statuses, so a new non-final value would otherwise have joined all of them silently:
+  `/outcome`'s follow-up branch no longer drafts a chase email for an application that was
+  never sent, `/gmail-sync` no longer reports unsent drafts as stale, `/notion-sync` leaves
+  "Applied on" empty for them and says "not yet submitted" in the page body rather than
+  calling drafts submitted documents, and `/html-report` gains a sixth **Drafted** bucket
+  kept out of the funnel, the rejection rate and the headline count. `/outcome` Step 4
+  overwrites `date` with the submission date when a row leaves `drafted`, so the column
+  keeps meaning "applied on".
+
+  **`/gmail-sync` deliberately keeps searching for drafted rows.** `/apply` drafts but the
+  user submits, and forgetting to run `/outcome` afterwards is the failure this issue is
+  about. An employer reply arriving against a row still marked `drafted` is how that gets
+  caught, so those rows stay in the search set, the application acknowledgement is promoted
+  from noise to a `drafted` -> `applied` signal (it is the one email that proves a hand
+  submission, and it arrives within a day of it), and an approved match corrects the `date`
+  as well as the status. Only the staleness check skips them, since nothing was sent. (#269)
 
 ## [1.3.0] - 2026-08-03
 
@@ -289,5 +422,9 @@ At this baseline the framework provides:
 - **Cross-runtime support** - a root `AGENTS.md` pointer so Codex and Antigravity can
   discover the portable portal skills, with Claude Code as the reference runtime.
 
-[Unreleased]: https://github.com/MadsLorentzen/ai-job-search/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/MadsLorentzen/ai-job-search/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/MadsLorentzen/ai-job-search/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/MadsLorentzen/ai-job-search/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/MadsLorentzen/ai-job-search/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/MadsLorentzen/ai-job-search/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/MadsLorentzen/ai-job-search/releases/tag/v1.0.0
