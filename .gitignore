@@ -46,6 +46,10 @@ Thumbs.db
 # Memory files (Claude Code user-specific)
 .claude/projects/
 
+# Personal profile/config files (keep local, never commit)
+CLAUDE.md
+.claude/skills/job-application-assistant/0[1-9]-*.md
+
 # Skills lock (auto-generated)
 skills-lock.json
 
@@ -99,3 +103,6 @@ upskill/*.md
 
 # Brainstorm mockups (superpowers visual companion) - never ship
 .superpowers/
+
+# Local scratch/debug captures
+.scratch/

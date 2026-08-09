@@ -49,10 +49,18 @@ Agent command overrides are available as `AUTOMATION_AGENT_CLAUDE_CMD`,
 ## Sources
 
 Every enabled portal skill is searched. Alongside LinkedIn, Freehire, and the
-Danish portals, the automation includes Remotive, Remote OK, Adzuna, and direct
-public Greenhouse, Lever, and Ashby company boards configured in
-`.agents/skills/ats-search/boards.json`. Jobicy is installed but disabled until
-its live API contract and reuse terms are revalidated. These integrations perform
+Danish portals, the automation includes Remotive, Remote OK, Hubstaff Talent,
+Remote Woman, We Work Remotely, JS Remotely (via its current `javascript.jobs`
+canonical site), WorkWave's official Lever board, Adzuna, and direct public
+Greenhouse, Lever, and Ashby company boards configured in
+`.agents/skills/ats-search/boards.json`.
+
+Highfive Global, Eztrackr, Wellfound, AI Jobs, Toptal, and FlexJobs are installed
+as explicitly disabled source records. They currently have no stable, supported
+public vacancy feed, are access controlled, or do not serve job listings. This
+is intentional: the source-health report says `skipped` with the reason instead
+of falsely treating an empty scrape as healthy. Jobicy remains disabled until its
+live API contract and reuse terms are revalidated. All enabled integrations make
 public GET requests only; none can submit an application.
 
 ## Commands
@@ -77,6 +85,19 @@ installed safely because the shared run ledger makes a completed day a no-op.
 
 The Telegram listener is separate from the daily trigger and should be kept
 alive with launchd while the Mac is online.
+
+## Delivery idempotency
+
+Each Telegram card is reserved in `automation/state/notification_ledger.sqlite3`
+before it is sent. The ledger hashes canonical URLs, source-scoped job IDs, and
+company/title/location aliases, so the same listing cannot be announced twice
+even when a second portal syndicates it under a different URL. SQLite uses WAL
+and transactional claims for scheduler/process safety.
+
+Known Telegram rejections (for example rate limits) remain in the JSON outbox
+and retry safely. Network-interrupted requests are marked `uncertain` in the
+ledger and are deliberately not replayed automatically: Telegram offers no
+idempotency key, so replaying an ambiguous request could duplicate a card.
 
 ## Telegram actions
 

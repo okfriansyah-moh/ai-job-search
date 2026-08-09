@@ -8,8 +8,8 @@ import unittest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
 
-from automation.filters import canonical_url, eligibility, job_key
-from automation.portals import normalize_job
+from automation.filters import canonical_url, eligibility, job_key, remote_work_taxonomy
+from automation.portals import LINKEDIN_LOCATIONS, normalize_job
 from automation.run_daily import merge_jobs
 from automation.ranking import deterministic_rank
 from automation.state import StateStore
@@ -22,10 +22,84 @@ class AutomationTest(unittest.TestCase):
     def test_location_and_india_gates(self):
         remote = {"company": "Example", "title": "Software Engineering Manager", "location": "Remote", "description": "Remote worldwide"}
         self.assertEqual(eligibility(remote)["eligible"], "yes")
+        anywhere_worldwide = {
+            **remote,
+            "location": "Berlin, Germany",
+            "description": "This role is distributed and can be done from anywhere in the world.",
+        }
+        self.assertEqual(eligibility(anywhere_worldwide)["eligible"], "yes")
         self.assertEqual(eligibility({**remote, "location": "Gurugram, India"})["eligible"], "no")
         self.assertEqual(eligibility({**remote, "location": "London, UK", "description": "Hybrid role"})["eligible"], "no")
         self.assertEqual(eligibility({**remote, "location": "Jakarta, Indonesia"})["eligible"], "yes")
         self.assertEqual(eligibility({**remote, "title": "Software Engineer"})["eligible"], "no")
+
+    def test_remote_taxonomy_distinguishes_worldwide_and_regional_constraints(self):
+        worldwide = remote_work_taxonomy(
+            {"work_mode": "remote", "job_location": "Remote", "description": "Work from anywhere in the world."}
+        )
+        self.assertEqual(worldwide["remote_classification"], "Full Remote (Worldwide / Unconstrained)")
+        self.assertEqual(worldwide["restriction_details"], "")
+
+        regional = remote_work_taxonomy(
+            {
+                "work_mode": "remote",
+                "job_location": "Remote - Singapore",
+                "description": "Candidates must reside in Singapore and overlap AEST business hours.",
+            }
+        )
+        self.assertEqual(regional["remote_classification"], "Full Remote (Regional Constraint)")
+        self.assertIn("Singapore", regional["restriction_details"])
+        self.assertIn("overlap AEST", regional["restriction_details"])
+
+        us_restriction = remote_work_taxonomy({"work_mode": "remote", "job_location": "Remote - U.S.: All locations"})
+        self.assertEqual(us_restriction["remote_classification"], "Full Remote (Regional Constraint)")
+        self.assertEqual(us_restriction["restriction_details"], "United States")
+
+        self.assertEqual(remote_work_taxonomy({"work_mode": "hybrid", "job_location": "Remote, Europe"}), {"remote_classification": "", "restriction_details": ""})
+
+        company_fact = remote_work_taxonomy(
+            {
+                "work_mode": "remote",
+                "job_location": "Remote",
+                "description": "Our company was founded in Singapore and serves Australia.",
+            }
+        )
+        self.assertEqual(company_fact["remote_classification"], "Full Remote (Worldwide / Unconstrained)")
+        self.assertEqual(company_fact["restriction_details"], "")
+
+        headquarters_fact = remote_work_taxonomy(
+            {
+                "work_mode": "remote",
+                "job_location": "Remote",
+                "description": "We are based in Australia and hire remote engineers globally.",
+            }
+        )
+        self.assertEqual(headquarters_fact["remote_classification"], "Full Remote (Worldwide / Unconstrained)")
+        self.assertEqual(headquarters_fact["restriction_details"], "")
+
+        timezone_restriction = remote_work_taxonomy(
+            {
+                "work_mode": "remote",
+                "job_location": "Remote",
+                "description": "Candidates must work UTC+1 business hours.",
+            }
+        )
+        self.assertEqual(timezone_restriction["remote_classification"], "Full Remote (Regional Constraint)")
+        self.assertIn("UTC+1", timezone_restriction["restriction_details"])
+
+        contradictory_source_mode = remote_work_taxonomy(
+            {
+                "work_mode": "remote",
+                "job_location": "Berlin, Germany",
+                "description": "Hybrid role, with two days in the office.",
+            }
+        )
+        self.assertEqual(contradictory_source_mode, {"remote_classification": "", "restriction_details": ""})
+
+    def test_linkedin_country_expansion_keeps_existing_markets(self):
+        locations = [location for location, remote_only in LINKEDIN_LOCATIONS if remote_only]
+        for country in ("United States", "United Kingdom", "Germany", "Netherlands", "Japan", "Malaysia", "Singapore", "Australia", "New Zealand", "Remote"):
+            self.assertIn(country, locations)
 
     def test_language_gate(self):
         job = {"company": "Example", "title": "Lead", "location": "Remote", "description": "German language required"}
@@ -62,6 +136,35 @@ class AutomationTest(unittest.TestCase):
         self.assertIn("Job location:", batches[0])
         self.assertIn("Work category:</b> Remote", batches[0])
         self.assertEqual(len(short_id(jobs[0])), 10)
+
+    def test_telegram_preserves_actions_and_renders_remote_taxonomy(self):
+        from automation.telegram import keyboard
+
+        job = {
+            "key": "regional-remote",
+            "title": "Engineering Manager",
+            "company": "Example",
+            "url": "https://example.test/job/1",
+            "job_location": "Remote, Europe",
+            "work_mode": "remote",
+            "remote_classification": "Full Remote (Regional Constraint)",
+            "restriction_details": "Must reside in the EU or UK.",
+        }
+        card = render_card(job)
+        self.assertIn("Remote taxonomy:</b> Full Remote (Regional Constraint)", card)
+        self.assertIn("📍 Restriction:</b> Must reside in the EU or UK.", card)
+        self.assertEqual(
+            keyboard(job)["inline_keyboard"],
+            [
+                [{"text": "🔗 Open posting", "url": "https://example.test/job/1"}],
+                [
+                    {"text": "✅ Applied", "callback_data": f"apply:{short_id(job)}"},
+                    {"text": "⭐ Interested", "callback_data": f"interest:{short_id(job)}"},
+                    {"text": "⏭ Skip", "callback_data": f"skip:{short_id(job)}"},
+                ],
+                [{"text": "📋 Update status", "callback_data": f"status:{short_id(job)}"}],
+            ],
+        )
 
     def test_state_ledger_allows_only_one_successful_daily_run(self):
         with tempfile.TemporaryDirectory() as directory:

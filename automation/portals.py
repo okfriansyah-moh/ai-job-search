@@ -25,6 +25,10 @@ LINKEDIN_LOCATIONS = [
     ("Germany", True),
     ("Netherlands", True),
     ("Japan", True),
+    ("Malaysia", True),
+    ("Singapore", True),
+    ("Australia", True),
+    ("New Zealand", True),
     ("Remote", True),
 ]
 
@@ -49,6 +53,17 @@ SPECS = {
     "greenhouse-search": PortalSpec("greenhouse-search", "global-job-sources"),
     "lever-search": PortalSpec("lever-search", "global-job-sources"),
     "ashby-search": PortalSpec("ashby-search", "global-job-sources"),
+    "highfive-search": PortalSpec("highfive-search", "global-job-sources"),
+    "eztrackr-search": PortalSpec("eztrackr-search", "global-job-sources"),
+    "hubstaff-talent-search": PortalSpec("hubstaff-talent-search", "global-job-sources"),
+    "remotewoman-search": PortalSpec("remotewoman-search", "global-job-sources"),
+    "wellfound-search": PortalSpec("wellfound-search", "global-job-sources"),
+    "weworkremotely-search": PortalSpec("weworkremotely-search", "global-job-sources"),
+    "workwave-search": PortalSpec("workwave-search", "global-job-sources"),
+    "ai-jobs-search": PortalSpec("ai-jobs-search", "global-job-sources"),
+    "toptal-search": PortalSpec("toptal-search", "global-job-sources"),
+    "flexjobs-search": PortalSpec("flexjobs-search", "global-job-sources"),
+    "jsremotely-search": PortalSpec("jsremotely-search", "global-job-sources"),
 }
 
 GLOBAL_SOURCE_PORTALS = {
@@ -59,6 +74,17 @@ GLOBAL_SOURCE_PORTALS = {
     "greenhouse-search": "greenhouse",
     "lever-search": "lever",
     "ashby-search": "ashby",
+    "highfive-search": "highfive",
+    "eztrackr-search": "eztrackr",
+    "hubstaff-talent-search": "hubstaff",
+    "remotewoman-search": "remotewoman",
+    "wellfound-search": "wellfound",
+    "weworkremotely-search": "weworkremotely",
+    "workwave-search": "workwave",
+    "ai-jobs-search": "aijobs",
+    "toptal-search": "toptal",
+    "flexjobs-search": "flexjobs",
+    "jsremotely-search": "jsremotely",
 }
 
 

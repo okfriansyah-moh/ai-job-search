@@ -13,6 +13,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+from .dedupe import NotificationDeduper, notification_fingerprint
 from .state import StateStore
 from .tracker import archive_outcome, pipeline_summary, record_stage, upsert_status
 
@@ -23,6 +24,14 @@ REQUEST_TIMEOUT_SECONDS = 10
 LONG_POLL_SECONDS = 25
 LONG_POLL_TIMEOUT_SECONDS = LONG_POLL_SECONDS + REQUEST_TIMEOUT_SECONDS + 5
 MAX_RESPONSE_BYTES = 1024 * 1024
+
+
+class TelegramDeliveryError(RuntimeError):
+    """A Telegram failure with an explicit retry-safety classification."""
+
+    def __init__(self, message: str, *, retryable: bool):
+        super().__init__(message)
+        self.retryable = retryable
 
 
 def short_id(job: dict[str, Any]) -> str:
@@ -41,6 +50,19 @@ def work_category(job: dict[str, Any]) -> str:
     if "on-site" in text or "onsite" in text or "in-office" in text:
         return "On-site"
     return "Not stated"
+
+
+def remote_taxonomy(job: dict[str, Any]) -> tuple[str, str]:
+    """Return display-safe remote classification details without changing card actions.
+
+    The eligibility pipeline is the authority for these fields.  Keeping a small
+    fallback here lets older cards remain readable while state migrates forward.
+    """
+    classification = str(job.get("remote_classification") or "").strip()
+    restriction = str(job.get("restriction_details") or "").strip()
+    if not classification and work_category(job) == "Remote":
+        classification = "Full Remote (Unclassified)"
+    return classification, restriction
 
 
 def card_value(job: dict[str, Any], field: str, fallback: str = "Not stated") -> str:
@@ -63,6 +85,7 @@ def render_card(job: dict[str, Any]) -> str:
     employment_type = card_value(job, "employment_type")
     salary = card_value(job, "salary", "Not disclosed")
     url = html.escape(str(job.get("url") or ""), quote=True)
+    remote_classification, restriction_details = remote_taxonomy(job)
     strengths = job.get("strengths") or []
     gaps = job.get("gaps") or []
     company_line = f'<a href="{company_url}">{company}</a>' if company_url.startswith(("http://", "https://")) else company
@@ -76,6 +99,11 @@ def render_card(job: dict[str, Any]) -> str:
         f"<b>Posted:</b> {posted_date} · <b>Deadline:</b> {deadline}",
         f"<b>Source:</b> {portal}",
     ]
+    if remote_classification:
+        lines.insert(4, f"<b>Remote taxonomy:</b> {html.escape(remote_classification)}")
+    if restriction_details:
+        insertion = 5 if remote_classification else 4
+        lines.insert(insertion, f"<b>📍 Restriction:</b> {html.escape(restriction_details)}")
     if strengths:
         lines.append("<b>Why it matches</b>\n" + "\n".join(f"• {html.escape(str(item))}" for item in strengths[:2]))
     if gaps:
@@ -152,11 +180,18 @@ class TelegramClient:
                 body = json.loads(response.read(MAX_RESPONSE_BYTES).decode("utf-8"))
         except urllib.error.HTTPError as exc:
             detail = exc.read(MAX_RESPONSE_BYTES).decode(errors="replace")[-500:]
-            raise RuntimeError(f"Telegram HTTP {exc.code}: {self._mask(detail)}") from exc
+            # An HTTP response proves that Telegram rejected the request.  It
+            # is safe to retain this card in the retryable outbox (including
+            # 429 rate limits).  A transport failure below is deliberately
+            # *not* retried automatically because Telegram may have accepted
+            # the message before the connection was interrupted.
+            raise TelegramDeliveryError(f"Telegram HTTP {exc.code}: {self._mask(detail)}", retryable=True) from exc
         except Exception as exc:
-            raise RuntimeError(f"Telegram request failed: {self._mask(str(exc))}") from exc
+            raise TelegramDeliveryError(f"Telegram request failed: {self._mask(str(exc))}", retryable=False) from exc
         if not body.get("ok"):
-            raise RuntimeError(f"Telegram API error: {self._mask(json.dumps(body, ensure_ascii=False))}")
+            raise TelegramDeliveryError(
+                f"Telegram API error: {self._mask(json.dumps(body, ensure_ascii=False))}", retryable=True
+            )
         return body.get("result", {})
 
     def _mask(self, value: str) -> str:
@@ -185,49 +220,114 @@ def send_digest(root: Path, jobs: list[dict[str, Any]], state: StateStore, dry_r
             print(f"\n--- Telegram job {index}/{len(jobs)} ---\n{render_card(job)}")
         return {"jobs": len(jobs), "batches": len(jobs), "sent": False}
     pending_outbox = state.read_json("telegram_outbox.json", [])
+    deduper = NotificationDeduper(state)
     if not jobs and not pending_outbox:
-        return {"jobs": 0, "batches": 0, "sent": True, "failed": 0}
+        unresolved = deduper.unresolved_count()
+        return {"jobs": 0, "batches": 0, "sent": unresolved == 0, "failed": unresolved, "uncertain": unresolved}
     mapping = state.read_json("telegram_jobs.json", {})
     for job in jobs:
         job_id = short_id(job)
         mapping[job_id] = job
     state.write_json("telegram_jobs.json", mapping)
+    # The JSON outbox remains human-readable and survives configuration/rate
+    # limit failures.  The SQLite ledger below is the actual idempotency gate;
+    # never infer delivery state from the outbox alone.
+    candidates: list[dict[str, Any]] = []
+    for item in pending_outbox:
+        if not isinstance(item, dict) or not item.get("text"):
+            continue
+        candidates.append({
+            **item,
+            "fingerprint": str(item.get("fingerprint") or hashlib.sha256(
+                f"legacy-outbox:{item.get('text')}:{json.dumps(item.get('reply_markup'), sort_keys=True)}".encode()
+            ).hexdigest()),
+            "job": item.get("job") if isinstance(item.get("job"), dict) else None,
+        })
+    if jobs:
+        # A stable, per-set summary prevents a force-run from repeating the
+        # heading while preserving the existing Telegram card presentation.
+        job_fingerprints = sorted({notification_fingerprint(job) for job in jobs})
+        candidates.append({
+            "created": time.time(),
+            "text": f"<b>Daily job matches</b>\n{len(jobs)} new ranked job(s).",
+            "reply_markup": None,
+            "fingerprint": hashlib.sha256(f"digest:{'|'.join(job_fingerprints)}".encode()).hexdigest(),
+            "job": {"external_id": f"digest:{'|'.join(job_fingerprints)}", "source": "telegram-digest"},
+            "kind": "digest",
+        })
+    seen_fingerprints: set[str] = set()
+    for job in jobs:
+        fingerprint = notification_fingerprint(job)
+        if fingerprint in seen_fingerprints:
+            continue
+        candidates.append({
+            "created": time.time(),
+            "text": render_card(job),
+            "reply_markup": keyboard(job),
+            "fingerprint": fingerprint,
+            "job": job,
+            "kind": "job",
+        })
+        seen_fingerprints.add(fingerprint)
+
+    # Do not send duplicate payloads queued by a previous process.  A record
+    # in the ledger still decides the final outcome, making this an efficiency
+    # measure rather than a correctness dependency.
+    unique_candidates: list[dict[str, Any]] = []
+    queued_fingerprints: set[str] = set()
+    for item in candidates:
+        fingerprint = str(item["fingerprint"])
+        if fingerprint not in queued_fingerprints:
+            unique_candidates.append(item)
+            queued_fingerprints.add(fingerprint)
+
     sent = 0
-    outbox: list[dict[str, Any]] = []
+    retry_outbox: list[dict[str, Any]] = []
+    uncertain = 0
     try:
         client = TelegramClient.from_env()
     except Exception as exc:
-        for job in jobs:
-            outbox.append({
-                "created": time.time(),
-                "text": render_card(job),
-                "reply_markup": keyboard(job),
-                "error": str(exc),
-            })
-        state.write_json("telegram_outbox.json", pending_outbox + outbox)
-        return {"jobs": len(jobs), "batches": len(jobs), "sent": False, "failed": len(jobs), "error": str(exc)}
-    for item in pending_outbox:
+        for item in unique_candidates:
+            retry_outbox.append({**item, "error": str(exc)})
+        state.write_json("telegram_outbox.json", retry_outbox)
+        return {"jobs": len(jobs), "batches": len(unique_candidates), "sent": False, "failed": len(retry_outbox), "error": str(exc)}
+    for item in unique_candidates:
+        job = item.get("job") or {"external_id": f"outbox:{item['fingerprint']}", "source": "telegram-outbox"}
+        claim = deduper.claim(job, payload={"text": item["text"], "reply_markup": item.get("reply_markup")})
+        if not claim.claimed:
+            # A sent, in-flight, or uncertain record is intentionally not
+            # requeued.  Repeating it would break the zero-duplicate promise.
+            continue
         try:
-            client.send(item["text"], item.get("reply_markup"))
-        except Exception as exc:
-            outbox.append({**item, "error": str(exc)})
-    if jobs:
-        try:
-            client.send(f"<b>Daily job matches</b>\n{len(jobs)} new ranked job(s).")
-        except Exception as exc:
-            outbox.append({"created": time.time(), "text": f"<b>Daily job matches</b>\n{len(jobs)} new ranked job(s).", "reply_markup": None, "error": str(exc)})
-    for job in jobs:
-        text = render_card(job)
-        markup = keyboard(job)
-        try:
-            client.send(text, markup)
+            result = client.send(item["text"], item.get("reply_markup"))
+            deduper.mark_sent(claim.fingerprint, result)
             sent += 1
             time.sleep(0.5)
+        except TelegramDeliveryError as exc:
+            deduper.mark_failed(claim.fingerprint, exc, retryable=exc.retryable)
+            if exc.retryable:
+                retry_outbox.append({**item, "error": str(exc)})
+            else:
+                uncertain += 1
         except Exception as exc:
-            outbox.append({"created": time.time(), "text": text, "reply_markup": markup, "error": str(exc)})
-    state.write_json("telegram_outbox.json", outbox)
-    failed = len(outbox)
-    return {"jobs": len(jobs), "batches": len(jobs), "sent": not outbox and sent == len(jobs), "failed": failed}
+            # Unknown client errors are treated just like an interrupted
+            # network request: fail closed and leave an auditable record.
+            deduper.mark_failed(claim.fingerprint, exc, retryable=False)
+            uncertain += 1
+    state.write_json("telegram_outbox.json", retry_outbox)
+    # Retain visibility of older ambiguous deliveries.  Silently treating a
+    # later run as healthy would erase the only signal that a card might have
+    # reached Telegram after its connection was interrupted.
+    unresolved = deduper.unresolved_count()
+    failed = len(retry_outbox) + unresolved
+    return {
+        "jobs": len(jobs),
+        "batches": len(unique_candidates),
+        "sent": failed == 0,
+        "failed": failed,
+        "uncertain": unresolved,
+        "deduplicated": len(unique_candidates) - sent - len(retry_outbox) - uncertain,
+    }
 
 
 def process_update(root: Path, state: StateStore, update: dict[str, Any]) -> None:
