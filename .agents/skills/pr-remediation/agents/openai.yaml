@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Remediation"
+  short_description: "Assess PR feedback and apply safe, validated fixes."
+  default_prompt: "Review the supplied PR comments, classify each item, apply only safe in-scope fixes, and report decisions with validation results."

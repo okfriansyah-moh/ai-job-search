@@ -1,0 +1,17 @@
+HTTP/2 200 
+date: Wed, 05 Aug 2026 05:25:43 GMT
+content-type: text/html; charset=utf-8
+x-ashby-request-id: 01KZ864YXV8YRBQ4H038XCQGS9
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: same-origin
+ashby-session-expiry-alert-level: 
+cache-control: public, max-age=60, stale-if-error=600
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+content-security-policy: base-uri 'self'; block-all-mixed-content; connect-src 'self' https://cdn.ashbyprd.com https://*.browser-intake-datadoghq.com https://browser-intake-datadoghq.com https://browser-intake-us3-datadoghq.com https://browser-intake-us5-datadoghq.com https://browser-intake-datadoghq.eu https://browser-intake-ddog-gov.com https://browser-intake-ap1-datadoghq.com https://ashbyhq-infra-prd-main-app-uploaded-files-us-east-1.s3.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-uploaded-files-us-east-1.s3.dualstack.us-east-1.amazonaws.com https://edge.fullstory.com https://rs.fullstory.com https://ashbyhq-infra-prd-main-app-meeting-recordings-us-east-1.s3.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-meeting-recordings-us-east-1.s3.dualstack.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-ai-interviewer-media-us-east-1.s3.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-ai-interviewer-media-us-east-1.s3.dualstack.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-ai-interviewer-assets-us-east-1.s3.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-ai-interviewer-assets-us-east-1.s3.dualstack.us-east-1.amazonaws.com https://www.recaptcha.net https://www.google.com/recaptcha https://sentry.io https://*.ingest.sentry.io https://*.livekit.cloud wss://*.livekit.cloud https://*.seondnsresolve.com https://*.seondfresolver.com https://*.deviceinfresolver.com https://*.seonintelligence.com https://assets.unicorn.studio; default-src 'none'; img-src 'self' https://cdn.ashbyprd.com https://rs.fullstory.com https: data:; script-src 'nonce-qEMUplxaqmuiyoWmWwQ4houQ4kYRDe4z2_B6Dk_7lFI' https://cdn.ashbyprd.com https://edge.fullstory.com https://rs.fullstory.com https://www.recaptcha.net/recaptcha/ https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://cdn.jsdelivr.net; style-src 'self' https://cdn.ashbyprd.com https: 'unsafe-inline'; upgrade-insecure-requests; font-src https://cdn.ashbyprd.com https:; child-src blob:; worker-src blob:; media-src https://ashbyhq-infra-prd-main-app-meeting-recordings-us-east-1.s3.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-meeting-recordings-us-east-1.s3.dualstack.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-ai-interviewer-media-us-east-1.s3.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-ai-interviewer-media-us-east-1.s3.dualstack.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-ai-interviewer-assets-us-east-1.s3.us-east-1.amazonaws.com https://ashbyhq-infra-prd-main-app-ai-interviewer-assets-us-east-1.s3.dualstack.us-east-1.amazonaws.com; frame-src https://www.recaptcha.net/recaptcha/ https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://embedded-media.ashbyhq.com;
+accept-ranges: bytes
+cf-cache-status: EXPIRED
+server: cloudflare
+cf-ray: a26361feada5ea85-CGK
+alt-svc: h3=":443"; ma=86400
+

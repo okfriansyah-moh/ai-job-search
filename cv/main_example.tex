@@ -1,169 +1,71 @@
-%% Example CV - [YOUR_NAME]
-%% Comprehensive overview of all competencies, experience, and achievements.
-%% Use as a master reference when tailoring role-specific CVs.
-%%
-%% SETUP: Run /setup to populate this with your actual information.
+%% Master CV - Muhammad Okfriansyah
 %% Compile with: lualatex main_example.tex
-%% (pdflatex often fails on modern MiKTeX with fontawesome5 font-expansion errors.)
-
 \documentclass[11pt,a4paper,sans]{moderncv}
 \moderncvstyle{banking}
 \moderncvcolor{blue}
-
-% Force both first and last name AND section headings to render in moderncv
-% blue (color1). Default banking on lualatex+MiKTeX leaves these black, which
-% looks inconsistent with the rest of the blue accent scheme.
 \renewcommand*{\firstnamestyle}[1]{{\fontsize{34}{36}\bfseries\upshape\color{color1}#1}}
 \renewcommand*{\lastnamestyle}[1]{{\fontsize{34}{36}\bfseries\upshape\color{color1}#1}}
 \renewcommand*{\sectionstyle}[1]{{\sectionfont\color{color1}#1}}
-
 \usepackage[utf8]{inputenc}
 \usepackage{hyperref}
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,
-    urlcolor=blue,
-    pdftitle={[YOUR_NAME] - CV},
-    pdfpagemode=FullScreen,
-}
-\usepackage[scale=0.80]{geometry}
+\hypersetup{colorlinks=true,linkcolor=blue,filecolor=magenta,urlcolor=blue,pdftitle={Muhammad Okfriansyah - CV},pdfpagemode=FullScreen}
+\usepackage[scale=0.77]{geometry}
 \usepackage{import}
-
-% personal data
-\name{[First]}{[Last]}
-\address{[Your Address, City, Country]}{}{}
-\phone[mobile]{[+XX XXXXXXXXXX]}
-\email{[your.email@example.com]}
-\extrainfo{\href{[https://linkedin.com/in/your-profile]}{LinkedIn}, \href{[https://github.com/your-username]}{GitHub}}
-
+\name{Muhammad}{Okfriansyah}
+\address{Jakarta, Indonesia}{Open to US Remote}{Remote-first; open to supported relocation}
+\phone[mobile]{+62 856-9439-0095}
+\email{okfriansyah@gmail.com}
+\extrainfo{\href{https://www.linkedin.com/in/muhammad-okfriansyah-74092671/}{LinkedIn}, \href{https://github.com/okfriansyah-moh}{GitHub}, \href{https://okfriansyah-moh.github.io/}{Portfolio}}
 \begin{document}
-
 \makecvtitle
-
-% ============================================================
-%     PROFILE STATEMENT
-% ============================================================
-
-\vspace{6pt}
-\small{[Write a 3-5 line profile statement tailored to the role you're applying for. Focus on what makes you uniquely qualified. Example: "Data scientist with a PhD in [field] and X years of industry experience. Combines deep domain expertise in [domain] with strong applied machine learning and Python development skills. Experienced in developing end-to-end ML pipelines, from data ingestion to stakeholder-facing dashboards."]}
-
-% ============================================================
-%     CORE COMPETENCIES
-% ============================================================
-
+\vspace{4pt}
+\small{Engineering leader with 13+ years of software engineering experience, including leadership of fintech and SaaS teams. Experienced in payment infrastructure, banking APIs, KYC, platform reliability, developer productivity, and cloud-cost optimization. Raised platform SLO from 98.7\% to 99.9\%, improved DORA metrics by 70\%, and reduced cloud costs by approximately 40\%.}
 \section{Core Competencies}
-\vspace{1pt}
 \begin{itemize}
-
-\item \textbf{[Skill Category 1]}: [Specific skills, frameworks, tools. Be concrete.]
-
-\item \textbf{[Skill Category 2]}: [Specific skills, frameworks, tools.]
-
-\item \textbf{[Skill Category 3]}: [Specific skills, frameworks, tools.]
-
-\item \textbf{[Skill Category 4]}: [Domain expertise, methods, approaches.]
-
-\item \textbf{[Skill Category 5]}: [Tools, platforms, software.]
-
+\item \textbf{Engineering Leadership}: Engineering management, technical direction, team health, delivery velocity, cross-functional alignment.
+\item \textbf{Architecture and Systems}: System design, API design, platform modernization, reliability engineering, performance optimization.
+\item \textbf{Payments and Banking}: Payment gateways, Internet Banking, Virtual Accounts, Credit Cards, KYC, Banking-as-a-Service, SNAP APIs.
+\item \textbf{Engineering Excellence}: DORA metrics, SLOs, observability, code coverage, Agile/Scrum, OKRs, compliance audits.
+\item \textbf{Technology}: Go, Java, TypeScript, Swift, SQL, Spring Boot, Angular, Node.js.
+\item \textbf{Infrastructure}: Docker, Jenkins, Grafana, SonarQube, Alibaba Cloud, MySQL, PostgreSQL.
 \end{itemize}
-
-% ============================================================
-%     PROFESSIONAL EXPERIENCE
-% ============================================================
-
 \section{Professional Experience}
-\vspace{3pt}
 \begin{itemize}
-
-% --- Most Recent Role ---
-\item{\cventry{[YYYY-Present]}{[Job Title]}{[Company]}{[City, Country]}{}{\vspace{1pt}
-\begin{itemize}
-    \item [Achievement or responsibility 1 - be specific, use numbers where possible]
-    \item [Achievement or responsibility 2]
-    \item [Achievement or responsibility 3]
-    \item [Achievement or responsibility 4]
+\item{\cventry{2025-Present}{Engineering Manager, Core \& Report Squads}{Mekari (PT Mid Solusi Nusantara)}{Jakarta, Indonesia}{}{\begin{itemize}
+\item Lead two squads building foundational services, APIs, and data reporting infrastructure for the Mekari Officeless platform.
+\item Direct the design and delivery of a fully customizable report builder for the Officeless product suite.
+\item Own team health, delivery velocity, and cross-functional alignment across product and business.
 \end{itemize}}}
-
-\vspace{3pt}
-
-% --- Previous Role ---
-\item{\cventry{[YYYY-YYYY]}{[Job Title]}{[Company]}{[City, Country]}{}{\vspace{1pt}
-\begin{itemize}
-    \item [Achievement or responsibility 1]
-    \item [Achievement or responsibility 2]
-    \item [Achievement or responsibility 3]
+\item{\cventry{2022-2024}{Lead Software Engineer, Financial Services}{Mekari (PT Mid Solusi Nusantara)}{Jakarta, Indonesia}{}{\begin{itemize}
+\item Led Core Payment, Kredigram, KYC, Expense Management, and Banking-as-a-Service teams.
+\item Improved DORA metrics by 70\%, with 90\% deployment frequency, approximately 70\% shorter lead time, under 1\% failure rate, and under 30-minute MTTR.
+\item Raised platform SLO from 98.7\% to 99.9\% through integrated product, engineering, and business strategies.
+\item Reduced cloud costs approximately 40\% through provider migration and resource consumption 50\% by rewriting key services in Go.
+\item Reduced API response times 30\% and page load times by 4 seconds through query optimization.
+\item Integrated Xendit, Midtrans, Ayoconnect, and NIUM payments, SNAP banking APIs with BNI, BRI, and Permata, and led a PJP Level 3 compliance audit.
 \end{itemize}}}
-
-\vspace{3pt}
-
-% --- Earlier Role ---
-\item{\cventry{[YYYY-YYYY]}{[Job Title]}{[Company]}{[City, Country]}{}{\vspace{1pt}
-\begin{itemize}
-    \item [Achievement or responsibility 1]
-    \item [Achievement or responsibility 2]
+\item{\cventry{2016-2022}{Technical Lead Developer, Core Payment}{DOKU (PT Nusa Satu Inti Artha)}{Jakarta, Indonesia}{}{\begin{itemize}
+\item Led the Core Payment team and owned API design and integration for Internet Banking, Virtual Accounts, Credit Cards, Rate Management, and Bank Transfers.
+\item Spearheaded the Jokul platform rewrite as Tech Lead using Angular and Spring Boot/Java, improving scalability, performance, and user experience.
 \end{itemize}}}
-
+\item{\cventry{2013-2015}{Java Developer}{PT Samz Solutions}{Jakarta, Indonesia}{}{\begin{itemize}
+\item Built ERP modules for Telkomsel and learning-platform modules for Pertamina.
+\end{itemize}}}
+\item{\cventry{2013}{Mobile Developer}{KMK Online (PT Kreatif Media Karya)}{Jakarta, Indonesia}{}{\begin{itemize}
+\item Managed SMS gateways, developed an SMS verification scheduler, and maintained GlassFish servers.
+\end{itemize}}}
 \end{itemize}
-
-% ============================================================
-%     EDUCATION
-% ============================================================
-
 \section{Education}
-\vspace{1pt}
 \begin{itemize}
-
-\item{\cventry{[YYYY-YYYY]}{[Degree] in [Field]}{[Institution]}{[City, Country]}{}{\vspace{1pt}
-Thesis: ``[Thesis Title].'' [Brief description of research focus.]
-}}
-
-\vspace{3pt}
-
-\item{\cventry{[YYYY-YYYY]}{[Degree] in [Field]}{[Institution]}{[City, Country]}{}{\vspace{1pt}
-[Brief description or key topics.]
-}}
-
+\item{\cventry{2008-2012}{B.S. in Informatics Engineering}{Universitas Gunadarma}{Jakarta, Indonesia}{}{}}
+\item{\cventry{2018-2019}{Apple Developer Academy, 1st Batch}{Apple Developer Academy}{Jakarta, Indonesia}{}{}}
 \end{itemize}
-
-% ============================================================
-%     LANGUAGES
-% ============================================================
-
 \section{Languages}
-\vspace{1pt}
 \begin{itemize}
-\item [Language 1] (native), [Language 2] (fluent), [Language 3] (intermediate).
+\item Indonesian (native), English (professional working proficiency).
 \end{itemize}
-
-% ============================================================
-%     PUBLICATIONS (optional)
-% ============================================================
-
-\section{Publications}
-\vspace{1pt}
-\begin{itemize}
-\item [Author(s)] ([Year]). [Title]. [Journal/Conference]. \href{[DOI_URL]}{DOI link}
-\end{itemize}
-
-% ============================================================
-%     HONORS AND AWARDS (optional)
-% ============================================================
-
-\section{Honors and Awards}
-\vspace{1pt}
-\begin{itemize}
-\item{\textbf{[Award Name]} -- [Event/Organization] ([Year]).}
-\end{itemize}
-
-% ============================================================
-%     REFERENCES
-% ============================================================
-
 \section{References}
-\vspace{1pt}
 \begin{itemize}
-\item{Available upon request.}
+\item Available upon request.
 \end{itemize}
-
 \end{document}

@@ -1,10 +1,10 @@
-# Job Application Assistant for [YOUR_NAME]
+# Job Application Assistant for Muhammad Okfriansyah
 
 <!-- SETUP: This file is populated by running /setup -->
-<!-- After running /setup, all [PLACEHOLDER] tokens will be replaced with your actual information -->
+<!-- Profile populated from the supplied resume and cover letter. -->
 
 ## Role
-This repo is a job application workspace. Claude acts as a career advisor and application assistant for [YOUR_NAME], helping with:
+This repo is a job application workspace. Claude acts as a career advisor and application assistant for Muhammad Okfriansyah, helping with:
 1. **Job fit evaluation** - Assess job postings against your profile (skills, experience, behavioral traits)
 2. **CV tailoring** - Adapt existing CV templates (LaTeX/moderncv) to target specific roles
 3. **Cover letter writing** - Draft targeted cover letters using existing templates (LaTeX)
@@ -16,27 +16,30 @@ This repo is a job application workspace. Claude acts as a career advisor and ap
 <!-- This section is auto-populated by /setup. You can also fill it in manually. -->
 
 ### Identity
-- **Name:** [YOUR_NAME]
-- **Location:** [YOUR_CITY], [YOUR_COUNTRY] ([YOUR_COMMUTE_CONSTRAINTS])
+- **Name:** Muhammad Okfriansyah
+- **Location:** Jakarta, Indonesia (remote-first; open to supported relocation)
 - **Languages:**
   | Language | Level |
   |----------|-------|
-  | [LANGUAGE] | [LEVEL] |
+  | Indonesian | Native |
+  | English | Professional working proficiency |
   <!-- Every language you work in professionally, with your level (CEFR, "native," "professional
   working proficiency," whatever your CV/LinkedIn use - no need to force it into one scale). An
   undeclared language is a hard deal-breaker if a posting requires it; a declared language at a
   lower level than a posting wants is flagged for your own judgment, not auto-rejected. See
   04-job-evaluation.md's Language Gate. -->
-- **CV language:** [YOUR_CV_LANGUAGE] <!-- English unless your market expects otherwise; /setup asks -->
+- **CV language:** English <!-- English unless your market expects otherwise; /setup asks -->
 
-- **Status:** [YOUR_EMPLOYMENT_STATUS]
-- **LinkedIn headline:** "[YOUR_LINKEDIN_HEADLINE]"
+- **Status:** Engineering Manager at Mekari, employed since January 2025
+- **LinkedIn headline:** "Engineering Manager and senior software engineering leader"
+- **LinkedIn:** https://www.linkedin.com/in/muhammad-okfriansyah-74092671/
+- **GitHub:** https://github.com/okfriansyah-moh
+- **Portfolio:** https://okfriansyah-moh.github.io/
 
 ### Education
 <!-- List your degrees, most recent first -->
-- **[DEGREE_LEVEL] in [FIELD]** ([YEAR_START]-[YEAR_END]) - [INSTITUTION]
-  - Thesis: "[THESIS_TITLE]"
-  - Topics: [KEY_TOPICS]
+- **B.S. in Informatics Engineering** (2008-2012) - Universitas Gunadarma, Jakarta
+- **Apple Developer Academy** (Jun 2018-Mar 2019) - Jakarta
 
 ### Professional Experience
 <!-- List your roles, most recent first -->
@@ -46,46 +49,46 @@ This repo is a job application workspace. Claude acts as a career advisor and ap
   - [KEY_ACHIEVEMENT]
 
 ### Technical Skills
-- **Primary:** [YOUR_PRIMARY_SKILLS]
-- **Secondary:** [YOUR_SECONDARY_SKILLS]
-- **Domain:** [YOUR_DOMAIN_EXPERTISE]
-- **Software:** [YOUR_TOOLS_AND_SOFTWARE]
+- **Primary:** Engineering leadership, Go, Java, TypeScript, system architecture, payment infrastructure, banking APIs, SLOs, DORA metrics
+- **Secondary:** Swift, Spring Boot, Angular, Node.js, Docker, Jenkins, Grafana, SonarQube, Alibaba Cloud, MySQL, PostgreSQL
+- **Domain:** Fintech, SaaS, payments, KYC, Banking-as-a-Service, API platforms, compliance, developer productivity
+- **Software:** Xendit, Midtrans, Ayoconnect, NIUM, BNI/BRI/Permata SNAP APIs
 
 ### Certifications
 <!-- List relevant certifications with dates -->
-- **[CERTIFICATION_NAME]** - [HOURS]h - completed [DATE]
+- No certifications listed in the supplied documents.
 
 ### Publications
 <!-- List peer-reviewed publications, if any -->
-- [AUTHOR_LIST] ([YEAR]). [TITLE]. [JOURNAL].
+- None listed in the supplied documents.
 
 ### Awards
 <!-- List relevant awards, hackathons, competitions -->
-- [AWARD_NAME] - [EVENT] ([YEAR])
+- None listed in the supplied documents.
 
 ### Behavioral Profile
 <!-- Your behavioral assessment results (PI, DISC, Myers-Briggs, or self-assessment) -->
 - **[TRAIT_1]** - [DESCRIPTION]
 - **[TRAIT_2]** - [DESCRIPTION]
-- **Strengths:** [YOUR_STRENGTHS]
-- **Growth areas:** [YOUR_GROWTH_AREAS]
-- **Thrives in:** [YOUR_IDEAL_ENVIRONMENT]
+- **Strengths:** Reliability, measurable improvement, cross-functional alignment, and engineer development. [Inferred from supplied documents]
+- **Growth areas:** Formal assessment and self-described growth areas not yet provided.
+- **Thrives in:** Strategic engineering environments with autonomy and dependable production systems. [Inferred from supplied documents]
 
 ### What Excites You
 <!-- What motivates you professionally -->
-- [PASSION_1]
-- [PASSION_2]
+- Building dependable software and teams that grow while delivering.
+- Architecture, reliability, developer productivity, cost efficiency, and high-stakes financial systems.
 
 ### Target Sectors
 <!-- Industries and companies you're targeting -->
-- [SECTOR_1]: [EXAMPLE_COMPANIES]
-- [SECTOR_2]: [EXAMPLE_COMPANIES]
+- All sectors, with strongest evidence in fintech, payments, banking, SaaS, platform engineering, and technology companies.
 
 ### Deal-breakers
 <!-- Hard constraints on job search. Language requirements are handled separately and
 automatically from your Languages table above - don't duplicate them here. -->
-- [DEALBREAKER_1]
-- [DEALBREAKER_2]
+- Remote-first preferred; fully remote roles worldwide are welcome.
+- Relocation is acceptable when the employer provides relocation support and a package.
+- Exclude India-based roles, roles requiring work from India, and India-based employers unless explicitly requested.
 
 ## Repo Structure
 - `cv/` - LaTeX CV variants (moderncv template, banking style)
