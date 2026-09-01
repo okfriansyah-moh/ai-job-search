@@ -66,7 +66,7 @@ For each **enabled** portal skill:
 
 1. Read its `SKILL.md` to find the correct `bun run …` invocation and supported flags.
 2. Translate the query terms from `search-queries.md` into that portal's flag format (e.g. `--key`, `--search-string`, `--query`, filter codes — whatever the portal's SKILL.md specifies).
-3. Scope to the last 14 days using the portal's supported recency flag (`--jobage`, `--since <YYYY-MM-DD>`, `--order PublicationDate`, etc. — as documented per portal).
+3. Scope to the last 14 days using the portal's supported recency **filter** flag (`--jobage`, `--since <YYYY-MM-DD>`, etc. — as documented per portal). A portal with **no recency flag** (jobdanmark offers none) still gets scoped: every portal's search output carries a `date` field, so filter client-side — drop results whose `date` is older than 14 days after the call returns, and never invent a flag the portal's SKILL.md does not document (the CLIs reject unknown flags). `--order PublicationDate` is a sort, and a sort is not a filter — pairing it with a `--limit` is a defensible approximation on a portal that offers nothing better (jobnet), but apply the client-side date filter on top all the same.
 4. Cap results to ~20 per call using the portal's limit flag.
 5. Use `--format json` for machine-readable output.
 
@@ -93,6 +93,16 @@ For each promising result from Step 1:
 and URL. For jobs worth a deeper look, fetch full detail with that portal's `detail`
 command (see its SKILL.md — do not guess flags) to extract **key requirements**,
 **application deadline**, and a brief description snippet.
+
+**Closed-at-source detection:** `linkedin-search detail` also returns `isActive`.
+`false` means the posting page itself renders LinkedIn's "No longer accepting
+applications" banner — the job died between being indexed and being fetched (expired
+LinkedIn URLs redirect to *similar live jobs*, so a search hit can be a ghost). Mark
+such a job, never silently drop it: write its entry to `seen_jobs.json` in Step 4 with
+`"status": "expired"` and leave it out of the Step 5 presentation — an absent entry
+looks identical to a job never seen, and the recorded status is what makes a later
+ghost report self-triaging. `isActive: true` is only the absence of that banner, not
+proof the posting is open; deadlines and dead URLs remain `/rank`'s job.
 
 **From WebSearch results:** Use `WebFetch` on the posting URL and extract the same
 fields manually. If it returns HTTP 403, retry with browser headers via curl per
@@ -140,6 +150,7 @@ For each new job, do a rapid fit check (NOT the full evaluation from `04-job-eva
       "company": "...",
       "url": "...",
       "first_seen": "YYYY-MM-DD",
+      "posted_date": "YYYY-MM-DD" | null,
       "deadline": "YYYY-MM-DD" | null,
       "fit": "high/medium/low",
       "status": "new/skipped/ranked/expired",
@@ -154,9 +165,11 @@ The `portal` field records which CLI skill produced the job (results are already
 
 The `source` field records which mechanism produced the entry: `cli` for Step 1b portal-CLI output, `websearch` for the Step 1c fallback. This is what keeps a ghost-job report diagnosable after the run's summary is gone: a stored entry whose URL later resolves to nothing (or to a different job) reads very differently depending on whether it came from live CLI output or from a search index that can be weeks stale - and a presented job with no entry here at all points at fabrication, which Rule 1 forbids. Entries written before this field existed lack it; never backfill it - the mechanism was not recorded.
 
-`/rank` extends this schema additively: ranked entries also carry `rank_score` (0–100 overall score), `rank_verdict` (fit band, e.g. "strong fit"), `rank_date` (ISO date of ranking), and `strengths`/`gaps` (1-3 verbatim bullets each, copied from the scoring agent's findings). The `status` field is set to `"ranked"`. Do not drop any of these fields when re-writing entries. Entries ranked before `strengths`/`gaps` existed simply lack them; readers tolerate their absence and never backfill by guessing.
+`/rank` extends this schema additively: ranked entries also carry `rank_score` (0–100 overall score), `rank_verdict` (fit band, e.g. "strong fit"), `rank_date` (ISO date of ranking), the veto fields `location_verdict` and `language_gate` (both PASS/FAIL/FLAG) with `language_note` (the quoted requirement explaining a non-PASS), and `strengths`/`gaps` (1-3 verbatim bullets each, copied from the scoring agent's findings). The `status` field is set to `"ranked"`. Do not drop any of these fields when re-writing entries. Entries ranked before `strengths`/`gaps` existed simply lack them; readers tolerate their absence and never backfill by guessing. Entries ranked before the verdict rename may carry a legacy PASS/FAIL/FLAG string in `location` - read that as the verdict when `location_verdict` is absent; in fresh entries `location` is always a place, never a verdict.
 
 `deadline` is a base field rather than a `/rank` extension: Step 2's detail fetch already extracts the application deadline, so it is written when the job is first seen and refreshed by `/rank` Step 4 when a scoring agent returns a different value. `null` means the posting states no deadline; a missing key means the entry predates this field - **never infer a deadline** from either, and never backfill by guessing.
+
+`posted_date` is the posting's own publication date, taken from the `date` field Step 2's contract already guarantees on every portal CLI's search output. Step 1b uses that date to scope the run to the last 14 days and then drops it, so nothing downstream can distinguish a posting published yesterday from one published two years ago - `first_seen` is when this scraper first saw the entry, not when the employer posted it. Persisting it makes Step 1b's window auditable after the run and gives `/rank` a freshness signal to weigh, instead of rediscovering the date and recording it in prose that nothing reads. That gap landed for real: a freehire-search posting dated 2024-05-13 was scraped and ranked Strong Fit at position 1 of 133, its own scoring note observing the listing "may be long stale" with nothing able to act on it. `null` means the portal returned no date for that result (the CLIs emit `date: null` when a listing omits it); a missing key means the entry predates this field - **never infer a posting date** from either, and never backfill by guessing.
 
 2. Only present jobs NOT already in the seen list or tracker.
 
