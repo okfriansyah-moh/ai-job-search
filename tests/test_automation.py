@@ -11,7 +11,7 @@ from pathlib import Path
 from automation.filters import canonical_url, eligibility, job_key, remote_work_taxonomy
 from automation.portals import LINKEDIN_LOCATIONS, normalize_job
 from automation.run_daily import merge_jobs
-from automation.ranking import deterministic_rank
+from automation.ranking import _prompt, deterministic_rank
 from automation.state import StateStore
 from automation.telegram import LONG_POLL_TIMEOUT_SECONDS, TelegramClient, render_card, short_id, split_cards
 from automation.telegram_setup import chats_from_updates
@@ -113,6 +113,12 @@ class AutomationTest(unittest.TestCase):
         self.assertGreaterEqual(result["score"], 0)
         self.assertLessEqual(result["score"], 100)
         self.assertTrue(result["strengths"])
+
+    def test_prompt_falls_back_when_profile_or_rubric_files_are_missing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            prompt = _prompt(Path(directory), {"title": "Engineering Manager", "company": "Example", "url": "https://example.test"})
+        self.assertIn("Candidate profile file missing", prompt)
+        self.assertIn("Use strict gates", prompt)
 
     def test_tracker_preserves_current_schema_and_is_idempotent_keyed_by_url(self):
         with tempfile.TemporaryDirectory() as directory:

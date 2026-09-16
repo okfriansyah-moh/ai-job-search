@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from automation.dedupe import NotificationDeduper, STATUS_FAILED, STATUS_SENT, STATUS_UNCERTAIN
 from automation.state import StateStore
-from automation.telegram import send_digest
+from automation.telegram import TelegramDeliveryError, send_digest
 
 
 class NotificationDeduplicationTest(unittest.TestCase):
@@ -116,6 +116,32 @@ class NotificationDeduplicationTest(unittest.TestCase):
             failed = ledger.claim({"external_id": "failed", "source": "test"})
             ledger.mark_failed(failed.fingerprint, "HTTP 429", retryable=True)
             self.assertEqual(ledger.unresolved_count(), 1)
+
+    def test_send_digest_retries_once_when_telegram_returns_retry_after(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state = StateStore(Path(directory))
+            job = {
+                "company": "Example",
+                "title": "Principal Engineer",
+                "job_location": "Remote",
+                "url": "https://example.test/jobs/1",
+                "rank_score": 90,
+            }
+            client = MagicMock()
+            client.send.side_effect = [
+                TelegramDeliveryError(
+                    'Telegram HTTP 429: {"ok":false,"error_code":429,"description":"Too Many Requests: retry after 3","parameters":{"retry_after":3}}',
+                    retryable=True,
+                ),
+                {"message_id": 10},
+                {"message_id": 11},
+            ]
+            with patch("automation.telegram.TelegramClient.from_env", return_value=client), patch("automation.telegram.time.sleep") as sleeper:
+                result = send_digest(Path(directory), [job], state)
+            self.assertEqual(result["failed"], 0)
+            self.assertTrue(result["sent"])
+            self.assertEqual(client.send.call_count, 3)
+            sleeper.assert_any_call(4)
 
 
 if __name__ == "__main__":

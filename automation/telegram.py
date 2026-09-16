@@ -6,6 +6,7 @@ import hashlib
 import html
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -24,6 +25,10 @@ REQUEST_TIMEOUT_SECONDS = 10
 LONG_POLL_SECONDS = 25
 LONG_POLL_TIMEOUT_SECONDS = LONG_POLL_SECONDS + REQUEST_TIMEOUT_SECONDS + 5
 MAX_RESPONSE_BYTES = 1024 * 1024
+RETRY_AFTER_PATTERNS = (
+    re.compile(r"retry after\s+(\d+)", flags=re.IGNORECASE),
+    re.compile(r'"retry_after"\s*:\s*(\d+)'),
+)
 
 
 class TelegramDeliveryError(RuntimeError):
@@ -32,6 +37,20 @@ class TelegramDeliveryError(RuntimeError):
     def __init__(self, message: str, *, retryable: bool):
         super().__init__(message)
         self.retryable = retryable
+
+
+def _retry_after_seconds(error: TelegramDeliveryError) -> int | None:
+    for pattern in RETRY_AFTER_PATTERNS:
+        match = pattern.search(str(error))
+        if not match:
+            continue
+        try:
+            seconds = int(match.group(1))
+        except (TypeError, ValueError):
+            continue
+        if seconds > 0:
+            return seconds
+    return None
 
 
 def short_id(job: dict[str, Any]) -> str:
@@ -298,22 +317,34 @@ def send_digest(root: Path, jobs: list[dict[str, Any]], state: StateStore, dry_r
             # A sent, in-flight, or uncertain record is intentionally not
             # requeued.  Repeating it would break the zero-duplicate promise.
             continue
-        try:
-            result = client.send(item["text"], item.get("reply_markup"))
-            deduper.mark_sent(claim.fingerprint, result)
-            sent += 1
-            time.sleep(0.5)
-        except TelegramDeliveryError as exc:
-            deduper.mark_failed(claim.fingerprint, exc, retryable=exc.retryable)
-            if exc.retryable:
-                retry_outbox.append({**item, "error": str(exc)})
-            else:
+        retried_after_limit = False
+        while True:
+            try:
+                result = client.send(item["text"], item.get("reply_markup"))
+                deduper.mark_sent(claim.fingerprint, result)
+                sent += 1
+                time.sleep(0.5)
+                break
+            except TelegramDeliveryError as exc:
+                retry_after = _retry_after_seconds(exc)
+                if exc.retryable and retry_after is not None and not retried_after_limit:
+                    # Honor Telegram's explicit backoff once, then fall back
+                    # to the standard outbox retry path if it still fails.
+                    time.sleep(retry_after + 1)
+                    retried_after_limit = True
+                    continue
+                deduper.mark_failed(claim.fingerprint, exc, retryable=exc.retryable)
+                if exc.retryable:
+                    retry_outbox.append({**item, "error": str(exc)})
+                else:
+                    uncertain += 1
+                break
+            except Exception as exc:
+                # Unknown client errors are treated just like an interrupted
+                # network request: fail closed and leave an auditable record.
+                deduper.mark_failed(claim.fingerprint, exc, retryable=False)
                 uncertain += 1
-        except Exception as exc:
-            # Unknown client errors are treated just like an interrupted
-            # network request: fail closed and leave an auditable record.
-            deduper.mark_failed(claim.fingerprint, exc, retryable=False)
-            uncertain += 1
+                break
     state.write_json("telegram_outbox.json", retry_outbox)
     # Retain visibility of older ambiguous deliveries.  Silently treating a
     # later run as healthy would erase the only signal that a card might have

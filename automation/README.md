@@ -98,6 +98,8 @@ Known Telegram rejections (for example rate limits) remain in the JSON outbox
 and retry safely. Network-interrupted requests are marked `uncertain` in the
 ledger and are deliberately not replayed automatically: Telegram offers no
 idempotency key, so replaying an ambiguous request could duplicate a card.
+When Telegram returns a `retry_after` backoff (HTTP 429), the sender now waits
+and retries once in the same run before falling back to the outbox.
 
 ## Telegram actions
 
