@@ -20,7 +20,7 @@ If `$ARGUMENTS` is empty or does not contain a recognized scope keyword, ask:
 >
 > - **`profile`** — Clears candidate data from the skill files (profile, behavioral, STAR examples, profile statements, personalized evaluation criteria, search queries). The framework structure, scoring framework, and writing rules are preserved. Use this to re-run `/setup` from scratch.
 >
-> - **`documents`** — Deletes all files you've placed in the `documents/` folder (CV PDFs, LinkedIn export, diplomas, references, pasted job postings, past applications). The folder structure and `README.md` are preserved.
+> - **`documents`** — Deletes all files you've placed in the `documents/` folder (CV PDFs, LinkedIn export, diplomas, references, project summaries, pasted job postings, past applications). The folder structure and `README.md` are preserved.
 >
 > - **`all`** — Both of the above.
 >
@@ -86,7 +86,7 @@ cv/main_example.tex. This scope covers skill files only.
 
 ### If scope includes `documents`:
 
-Use Glob to list all files present in `documents/cv/`, `documents/linkedin/`, `documents/diplomas/`, `documents/references/`, `documents/postings/`, and `documents/applications/`. Present as:
+Use Glob to list all files present in `documents/cv/`, `documents/linkedin/`, `documents/diplomas/`, `documents/references/`, `documents/projects/`, `documents/postings/`, and `documents/applications/`. Present as:
 
 ```
 ## Documents reset will delete:
@@ -101,6 +101,9 @@ documents/diplomas/
   - [filename] or "(empty)"
 
 documents/references/
+  - [filename] or "(empty)"
+
+documents/projects/
   - [filename] or "(empty)"
 
 documents/postings/
@@ -168,11 +171,13 @@ Wait for the user's response.
 
 ## Overview
 
-## Strongest Behavioral Traits
+## Core Behavioral Drives
 
-## How I Work Best
+## Strongest Behaviors
 
-## Growth Areas
+## How You Work Best
+
+## Growth Areas (frame positively in applications)
 
 ## Mapping to Job Posting Language
 
@@ -202,12 +207,12 @@ Also remove any `## Calibration from Past Applications` section, which `/setup` 
 
 Leave the rest of `04-job-evaluation.md` intact: the five scoring dimensions and their score bands, the weighting, the Language Gate, the red-flag guidance, the Company Research Checklist and cache schema, and the salary benchmark section. If `/setup` Step 3.4 ever personalizes a value not in the table above, add it here too.
 
-**For `05-cv-templates.md`**, locate the section that begins with `**Profile statement templates` and extends through the role-specific template blocks. Replace only that section with:
+**For `05-cv-templates.md`**, locate the section that begins with the line `**Create 2-3 profile statement templates for your main role types:**` and extends through the role-specific template blocks, including any statements labeled *[Used for: <company>_<role>]* that `/setup` Path A extracted from archived applications. Stop before the paragraph that begins "Statements labeled" - that is framework guidance, not candidate data. Replace only that section with:
 
 ```markdown
-**Profile statement templates:**
+**Create 2-3 profile statement templates for your main role types:**
 
-<!-- Run /setup to populate role-specific profile statements -->
+<!-- SETUP: These are populated based on your background -->
 ```
 
 Then restore the contact block inside the file's LaTeX template to its placeholder tokens: `\name{[FIRST_NAME]}{[LAST_NAME]}`, `\address{[YOUR_ADDRESS]}{}{}`, `\phone[mobile]{[YOUR_PHONE]}`, `\email{[YOUR_EMAIL]}`, the `\extrainfo{...}` line's `[YOUR_LINKEDIN_URL]` and `[YOUR_GITHUB_URL]`, and `[YOUR_NAME]` in the `pdftitle`. Leave all other content in `05-cv-templates.md` intact.
@@ -246,6 +251,7 @@ rm -f documents/cv/*
 rm -f documents/linkedin/*
 rm -f documents/diplomas/*
 rm -f documents/references/*
+rm -f documents/projects/*
 rm -f documents/postings/*
 rm -rf documents/applications/*/
 ```

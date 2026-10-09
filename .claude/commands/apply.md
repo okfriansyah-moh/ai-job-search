@@ -44,13 +44,29 @@ python salary_lookup.py "<Company Name>" --json
 
 If the posting specifies a city, add `--city "<City>"` to narrow results. Parse the JSON output and include the salary benchmark in the evaluation. If the tool is not configured or returns an error, skip the salary benchmark.
 
+### Source Host Verification (when input is a URL)
+
+Before proceeding to drafting, inspect the posting URL's hostname to verify provenance (#431). Classify the host into one of three categories:
+
+1. **Installed portal board:** the host matches any configured job portal in `.agents/skills/` (e.g. `jobindex.dk`, `linkedin.com`, `jobnet.dk`, `jobbank.dk`, `jobdanmark.dk`, `freehire.me`, or any portal added by `/add-portal`).
+2. **Known official ATS apex:** the host matches or is a valid subdomain of one of the six standard ATS domains:
+   - `greenhouse.io`
+   - `lever.co`
+   - `myworkdayjobs.com` (or `workday.com`)
+   - `ashbyhq.com`
+   - `smartrecruiters.com`
+   - `workable.com`
+   *Look-alike parsing:* the host must match the apex exactly or end with `.<apex>`. Look-alike prefix tricks (e.g. `evil-greenhouse.io`), suffix spoofing (e.g. `job-boards.greenhouse.io.evil.com`), userinfo tricks (`https://greenhouse.io@evil.com/`), and unfamiliar subdomains fail closed and must not be classified as an official ATS.
+3. **Neither (Unverified host):** name the host plainly in the evaluation output as unverified (`⚠ Unverified source host: <hostname> - not an installed portal board or known ATS apex`). Alert the user to verify the employer and link legitimacy before committing time and tokens to drafting.
+
 Present the evaluation to the user with:
 
-1. **Skills match** - which required/preferred skills match vs. gaps
-2. **Experience match** - how work history maps to the role
-3. **Behavioral/culture match** - how behavioral profile fits the role/company culture
-4. **Salary benchmark** - salary index for the company (if available)
-5. **Overall fit score** and recommendation (strong fit / moderate fit / weak fit)
+1. **Source host verification** - installed portal board, official ATS, or ⚠ unverified source host (named plainly)
+2. **Skills match** - which required/preferred skills match vs. gaps
+3. **Experience match** - how work history maps to the role
+4. **Behavioral/culture match** - how behavioral profile fits the role/company culture
+5. **Salary benchmark** - salary index for the company (if available)
+6. **Overall fit score** and recommendation (strong fit / moderate fit / weak fit)
 
 After presenting the evaluation, ask the user:
 > "Should I proceed with drafting the CV and cover letter for this role?"
@@ -232,11 +248,15 @@ If either compile fails, fix the error and re-compile until clean.
 **Measure first, then look.** A visual read catches gross breakage but cannot tell you that a page is 40% empty, and the failure below survives both a clean compile and a correct page count:
 
 ```bash
+python tools/verify_pdf.py cv/main_<company>_<role>.pdf --pages 2
+python tools/verify_pdf.py cover_letters/cover_<company>_<role>.pdf --pages 1
 python tools/verify_layout.py cv/main_<company>_<role>.pdf
 python tools/verify_layout.py cover_letters/cover_<company>_<role>.pdf
 ```
 
-The script reports, per page, where the text starts and stops, bottom whitespace as a share of page height, and the largest vertical gap between lines. It exits 1 on: a hole over 100pt (~7 blank lines), a non-final page ending more than 25% early, body text colliding with the page-number footer, a final page more than 35% empty, and an entry header or section heading stranded at a page break. Page count is **not** checked here — that is `verify_pdf.py --pages`'s job, and Step 5d already runs it.
+The two `--pages` lines are the page-count check: exactly 2 pages for the CV and exactly 1 for the cover letter (the hard limits in `05-cv-templates.md` and `06-cover-letter-templates.md`), exit 1 otherwise. With a custom template active, substitute its declared **Page limit** from the `ACTIVE-TEMPLATE` block. Nothing else runs this check - `verify_layout.py` deliberately leaves page count to it, and Step 5d's extraction call passes no `--pages` - so if these lines are skipped, the page budget is enforced by nothing but the visual read below.
+
+The layout script reports, per page, where the text starts and stops, bottom whitespace as a share of page height, and the largest vertical gap between lines. It exits 1 on: a hole over 100pt (~7 blank lines), a non-final page ending more than 25% early, body text colliding with the page-number footer, a final page more than 35% empty, and an entry header or section heading stranded at a page break. Page count is **not** checked here — that is `verify_pdf.py --pages`'s job, and the two `--pages` lines above run it.
 
 The hole check is the one a visual read misses. A moderncv `\cventry` renders as a `tabular`, so it is an **unbreakable block**: when it does not fit in the space left, the whole entry jumps to the next page and leaves a hole behind, while the document still compiles and still reports the right page count. Fix it by shortening the entry that follows the hole, not by stretching the page.
 
@@ -278,8 +298,10 @@ An ATS parser reads the PDF's embedded **text layer**, not the rendered page —
 **1. Extract the text layer:**
 
 ```bash
-python tools/verify_pdf.py cv/main_<company>_<role>.pdf --dump-text cv/main_<company>_<role>.txt
+python tools/verify_pdf.py cv/main_<company>_<role>.pdf --ascii-dates --dump-text cv/main_<company>_<role>.txt
 ```
+
+`--ascii-dates` is the date-range check from `05-cv-templates.md` ("Date fields must be ASCII ranges"): it exits 1 if the raw text layer has a year joined to a Unicode dash - the en-dash LaTeX makes from `--`, which a Workday import dropped together with the date - naming each hit and its code point. It reads the raw layer, not the folded comparison `--contains` uses, which is why `--contains "2016-2024"` cannot catch this. The dump is written before the check runs, so a failure still leaves the `.txt`. Fix a hit in the `<CV_EXT>` date argument (a single ASCII hyphen), then re-run 5a-5c and re-extract.
 
 The command prints `extractor: pypdf` or `extractor: pdftotext`. Record that name in the Step 6 report. Read the `.txt` file. If that tool is unavailable, the Poppler fallback is:
 
@@ -292,7 +314,7 @@ cd cv && pdftotext -layout -enc UTF-8 main_<company>_<role>.pdf main_<company>_<
 - [ ] **Text extracted at all**, with no garbage runs: no `(cid:NNN)` markers, no `�` replacement characters, no stretches of missing text that are visible in the PDF
 - [ ] **Email and phone survive as literal text.** Icon fonts extract as glyph names (the stock template's contact line extracts as `MOBILE-ALT [+XX ...] • Envelope [your.email@...]`) — that noise is harmless, but the actual address and digits must be present. A contact detail carried only by an icon or a hyperlink target (like the `LinkedIn` link text) is invisible to an ATS; the email must be printed as text.
 - [ ] **Reading order matches the visual order** — section headings appear in the same sequence as on the page, and lines from different sections are not interleaved. The stock banking template is single-column and safe; custom templates registered via `/add-template` with sidebars or multi-column layouts are where this breaks.
-- [ ] **Dates recognizable** — each role and degree has its years present in the extraction.
+- [ ] **Dates recognizable and ASCII-joined** — each role and degree has its years present in the extraction with a start *and* an end, and `--ascii-dates` above exited 0. A bare single year (`2016`) is the half the flag cannot see: it imports as a start with no end, so read for it.
 
 Failures here are template-level problems: fix them in the `<CV_EXT>` source (e.g. print the email as text rather than icon-only), then re-run 5a–5c and re-extract. If a custom template's layout fundamentally scrambles extraction order, tell the user prominently — they may be trading ATS compatibility for looks.
 

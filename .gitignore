@@ -17,6 +17,7 @@ venv/
 *.synctex.gz
 *.fls
 *.fdb_latexmk
+build/
 
 # Personal data (never commit these)
 salary_data.json
@@ -77,6 +78,7 @@ documents/cv/**
 documents/linkedin/**
 documents/diplomas/**
 documents/references/**
+documents/projects/**
 # Also where /interview saves its prep packs (interview_prep_<stage>.md): these
 # name the employers applied to, quote what was submitted, and set out the
 # candidate's weak points.
